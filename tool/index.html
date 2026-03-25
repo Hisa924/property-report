@@ -7506,15 +7506,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Chrome拡張からのデータ受け取り（URLハッシュ経由）
+  // WebUIからのデータ受け取り（URLハッシュ #import= 経由）
   const hash = location.hash;
   if (hash.startsWith('#import=')) {
     try {
-      const json = JSON.parse(decodeURIComponent(escape(atob(hash.substring(8)))));
-      if (typeof fillFromJson === 'function') fillFromJson(json);
+      // ensure_ascii=True で生成したASCII JSONなのでatob()一発でデコード可能
+      const b64str = hash.substring(8);
+      const jsonStr = atob(b64str);
+      const importData = JSON.parse(jsonStr);
+      // DOMが完全に安定してから入力（50ms待機）
+      setTimeout(() => {
+        if (typeof fillFromJson === 'function') fillFromJson(importData);
+      }, 50);
       history.replaceState(null, '', location.pathname + location.search);
     } catch (e) {
-      console.error('Chrome拡張からのデータ読み込みに失敗:', e);
+      console.error('データ読み込みに失敗:', e);
     }
   }
 
