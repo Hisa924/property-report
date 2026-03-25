@@ -7523,7 +7523,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const dataParam = urlParams.get('data');
   if (dataParam) {
     try {
-      const bytes = Uint8Array.from(atob(dataParam), c => c.charCodeAt(0));
+      // URL-safe Base64（-→+、_→/）を標準Base64に戻してからdecode
+      const b64std = dataParam.replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(b64std), c => c.charCodeAt(0));
       const decoded = JSON.parse(new TextDecoder('utf-8').decode(bytes));
       if (typeof fillFromJson === 'function') {
         setTimeout(() => fillFromJson(decoded), 150);
