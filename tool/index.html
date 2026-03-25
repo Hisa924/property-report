@@ -7535,5 +7535,167 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+<!-- ===================== MOBILE RESPONSIVE ===================== -->
+<style>
+/* ── モバイル専用スタイル (max-width: 768px) ── */
+@media (max-width: 768px) {
+  /* レイアウト：縦1カラム */
+  .main-container { flex-direction: column !important; height: auto !important; overflow: visible !important; }
+  .left-panel { width: 100% !important; min-width: unset !important; max-width: unset !important; height: auto !important; max-height: none !important; overflow-y: visible !important; padding-bottom: 100px; }
+  .resize-handle { display: none !important; }
+
+  /* 入力フォームのタッチ最適化 */
+  .form-input, select.form-input { min-height: 44px; font-size: 16px !important; /* iOS zoom防止 */ }
+  .form-label { font-size: 13px; }
+  .section { padding: 14px 16px !important; }
+  .btn-calc { display: none !important; } /* FABに置き換え */
+
+  /* 右パネル → ボトムシート */
+  .right-panel {
+    position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+    width: 100% !important; height: 0 !important; min-height: 0 !important;
+    transition: height 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+    z-index: 600 !important; background: #fff !important;
+    overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -4px 28px rgba(0,0,0,.22) !important;
+  }
+  .right-panel.mob-open { height: 90vh !important; }
+
+  /* ボトムシート内部 */
+  #mob-sheet-head {
+    display: flex !important; align-items: center; justify-content: center;
+    padding: 10px 16px 4px; position: sticky; top: 0; background: #fff; z-index: 10;
+  }
+  .mob-drag-bar { width: 40px; height: 4px; background: #ddd; border-radius: 2px; }
+  #mob-sheet-close {
+    position: absolute; right: 14px; top: 8px;
+    background: none; border: none; font-size: 22px; color: #888; cursor: pointer; padding: 4px 8px;
+  }
+
+  /* プランタブ */
+  #mob-plan-tabs {
+    display: flex !important; gap: 8px; padding: 6px 14px 8px;
+    overflow-x: auto; position: sticky; top: 36px; background: #fff; z-index: 9;
+    border-bottom: 1px solid #eee;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  #mob-plan-tabs::-webkit-scrollbar { display: none; }
+  .mob-tab {
+    flex-shrink: 0; padding: 7px 16px; border-radius: 20px;
+    border: 1px solid #ddd; background: #fff; font-size: 12px; cursor: pointer;
+    text-align: center; line-height: 1.4;
+  }
+  .mob-tab.mob-active { background: #2A2520; color: #fff; border-color: #2A2520; }
+  .mob-tab span { display: block; font-size: 13px; font-weight: 700; }
+
+  /* プランカード：タブ非アクティブは非表示 */
+  .plan-card.mob-hide { display: none !important; }
+  .plans-grid { gap: 0 !important; padding: 0 !important; }
+
+  /* FABボタン */
+  #mob-fab {
+    display: flex !important; align-items: center; gap: 8px;
+    position: fixed; bottom: 20px; right: 18px;
+    background: #C8783A; color: #fff; border: none; border-radius: 56px;
+    padding: 14px 22px; font-size: 16px; font-weight: 700;
+    box-shadow: 0 4px 18px rgba(200,120,58,.55); cursor: pointer; z-index: 500;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+/* デスクトップではモバイル要素を隠す */
+@media (min-width: 769px) {
+  #mob-fab, #mob-sheet-head, #mob-plan-tabs, #mob-overlay { display: none !important; }
+}
+</style>
+
+<!-- モバイル用オーバーレイ -->
+<div id="mob-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:599" onclick="mobSheetClose()"></div>
+
+<!-- モバイル用FAB -->
+<button id="mob-fab" style="display:none" onclick="mobCalc()">&#9654; 試算する</button>
+
+<script>
+(function() {
+  if (window.innerWidth > 768) return;
+
+  // ボトムシートの中にハンドル＋タブを注入
+  const rp = document.getElementById('rightPanel');
+  if (!rp) return;
+
+  const head = document.createElement('div');
+  head.id = 'mob-sheet-head';
+  head.innerHTML = '<div class="mob-drag-bar"></div><button id="mob-sheet-close" onclick="mobSheetClose()">✕</button>';
+
+  const tabs = document.createElement('div');
+  tabs.id = 'mob-plan-tabs';
+
+  rp.insertBefore(tabs, rp.firstChild);
+  rp.insertBefore(head, rp.firstChild);
+})();
+
+function mobCalc() {
+  if (typeof calculate === 'function') {
+    calculate();
+    setTimeout(function() {
+      const sec = document.getElementById('resultsSection');
+      if (sec && sec.style.display !== 'none') {
+        mobSheetOpen();
+        mobInitTabs();
+      }
+    }, 350);
+  }
+}
+
+function mobSheetOpen() {
+  document.querySelector('.right-panel').classList.add('mob-open');
+  const ov = document.getElementById('mob-overlay');
+  if (ov) { ov.style.display = 'block'; }
+  document.body.style.overflow = 'hidden';
+}
+
+function mobSheetClose() {
+  document.querySelector('.right-panel').classList.remove('mob-open');
+  const ov = document.getElementById('mob-overlay');
+  if (ov) { ov.style.display = 'none'; }
+  document.body.style.overflow = '';
+}
+
+function mobInitTabs() {
+  const tabs = document.getElementById('mob-plan-tabs');
+  if (!tabs) return;
+  const cards = Array.from(document.querySelectorAll('.plan-card'));
+  if (!cards.length) return;
+
+  // ベストカードを探す
+  let bestIdx = cards.findIndex(function(c){ return c.classList.contains('is-best'); });
+  if (bestIdx < 0) bestIdx = 0;
+
+  const names = ['RC造', '重量鉄骨', 'Kフレーム'];
+  tabs.innerHTML = cards.map(function(card, i) {
+    // 利回り取得
+    const yEl = card.querySelector('.km-accent');
+    const yTxt = yEl ? yEl.textContent.trim() : '';
+    const active = i === bestIdx ? ' mob-active' : '';
+    if (i !== bestIdx) card.classList.add('mob-hide');
+    else card.classList.remove('mob-hide');
+    return '<button class="mob-tab' + active + '" onclick="mobSwitch(' + i + ')">'
+      + (names[i] || 'プラン' + (i+1))
+      + (yTxt ? '<span>' + yTxt + '%</span>' : '')
+      + '</button>';
+  }).join('');
+}
+
+function mobSwitch(idx) {
+  Array.from(document.querySelectorAll('.plan-card')).forEach(function(c, i) {
+    c.classList.toggle('mob-hide', i !== idx);
+  });
+  Array.from(document.querySelectorAll('.mob-tab')).forEach(function(t, i) {
+    t.classList.toggle('mob-active', i === idx);
+  });
+  document.querySelector('.right-panel').scrollTop = 0;
+}
+</script>
 </body>
 </html>
