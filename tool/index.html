@@ -7523,10 +7523,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const dataParam = urlParams.get('data');
   if (dataParam) {
     try {
-      // URL-safe Base64（-→+、_→/）を標準Base64に戻してからdecode
-      const b64std = dataParam.replace(/-/g, '+').replace(/_/g, '/');
-      const bytes = Uint8Array.from(atob(b64std), c => c.charCodeAt(0));
-      const decoded = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      // ensure_ascii=TrueのJSON→Base64なのでatob()一発でデコード可能
+      const decoded = JSON.parse(atob(dataParam));
       if (typeof fillFromJson === 'function') {
         setTimeout(() => fillFromJson(decoded), 150);
       }
@@ -7666,10 +7664,10 @@ document.addEventListener('DOMContentLoaded', () => {
     background: none; border: none; font-size: 22px; color: #888; cursor: pointer; padding: 4px 8px;
   }
 
-  /* プランタブ */
+  /* プランタブ（スクロールしても追従しないようにrelative） */
   #mob-plan-tabs {
     display: flex !important; gap: 8px; padding: 6px 14px 8px;
-    overflow-x: auto; position: sticky; top: 36px; background: #fff; z-index: 9;
+    overflow-x: auto; position: relative; background: #fff;
     border-bottom: 1px solid #eee;
     -ms-overflow-style: none; scrollbar-width: none;
   }
@@ -7741,7 +7739,9 @@ function mobCalc() {
 }
 
 function mobSheetOpen() {
-  document.querySelector('.right-panel').classList.add('mob-open');
+  const rp = document.querySelector('.right-panel');
+  rp.classList.add('mob-open');
+  rp.scrollTop = 0;  // 計算後にスクロール位置が残らないようリセット
   const ov = document.getElementById('mob-overlay');
   if (ov) { ov.style.display = 'block'; }
   document.body.style.overflow = 'hidden';
@@ -7774,7 +7774,7 @@ function mobInitTabs() {
     else card.classList.remove('mob-hide');
     return '<button class="mob-tab' + active + '" onclick="mobSwitch(' + i + ')">'
       + (names[i] || 'プラン' + (i+1))
-      + (yTxt ? '<span>' + yTxt + '%</span>' : '')
+      + (yTxt ? '<span>' + yTxt + '</span>' : '')  // yTxtは既に%を含む（key-metric-unit spanのtextContent）
       + '</button>';
   }).join('');
 }
