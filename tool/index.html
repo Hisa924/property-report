@@ -7654,24 +7654,31 @@ document.addEventListener('DOMContentLoaded', () => {
     transition: height 0.35s cubic-bezier(0.4,0,0.2,1) !important;
     z-index: 600 !important; background: #fff !important;
     overflow: hidden !important;
+    visibility: hidden !important;
     border-radius: 20px 20px 0 0 !important;
     box-shadow: none !important;
   }
   .right-panel.mob-open {
     height: 90vh !important;
     overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+    visibility: visible !important;
     box-shadow: 0 -4px 28px rgba(0,0,0,.22) !important;
   }
 
-  /* ボトムシート内部 */
+  /* ボトムシート内部 - ドラッグバーなし、×ボタンのみのミニヘッダー */
   #mob-sheet-head {
-    display: flex !important; align-items: center; justify-content: center;
-    padding: 10px 16px 4px; position: sticky; top: 0; background: #fff; z-index: 10;
+    display: flex !important; align-items: center; justify-content: flex-end;
+    padding: 8px 10px 4px !important;
+    position: sticky !important; top: 0 !important; background: #fff !important; z-index: 10 !important;
   }
-  .mob-drag-bar { width: 40px; height: 4px; background: #ddd; border-radius: 2px; }
+  .mob-drag-bar { display: none !important; }
   #mob-sheet-close {
-    position: absolute; right: 14px; top: 8px;
-    background: none; border: none; font-size: 22px; color: #888; cursor: pointer; padding: 4px 8px;
+    position: static !important;
+    background: #efefef !important; border: none !important;
+    border-radius: 50% !important; width: 30px !important; height: 30px !important;
+    font-size: 16px !important; color: #555 !important; cursor: pointer !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    padding: 0 !important; line-height: 1 !important;
   }
 
   /* プランタブ（スクロールしても追従しないようにrelative） */
