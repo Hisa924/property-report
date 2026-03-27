@@ -7653,11 +7653,15 @@ document.addEventListener('DOMContentLoaded', () => {
     width: 100% !important; height: 0 !important; min-height: 0 !important;
     transition: height 0.35s cubic-bezier(0.4,0,0.2,1) !important;
     z-index: 600 !important; background: #fff !important;
-    overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+    overflow: hidden !important;
     border-radius: 20px 20px 0 0 !important;
+    box-shadow: none !important;
+  }
+  .right-panel.mob-open {
+    height: 90vh !important;
+    overflow-y: auto !important; -webkit-overflow-scrolling: touch;
     box-shadow: 0 -4px 28px rgba(0,0,0,.22) !important;
   }
-  .right-panel.mob-open { height: 90vh !important; }
 
   /* ボトムシート内部 */
   #mob-sheet-head {
