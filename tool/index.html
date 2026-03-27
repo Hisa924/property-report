@@ -6125,7 +6125,7 @@ function calculate() {
         <div class="val">${fmt(designatedBCR, 0)}<span style="font-size:11px">%</span></div>
         <div class="lbl">最大建ぺい率</div>
       </div>
-      <div class="summary-item">
+      <div class="summary-item mob-hide-item">
         <div class="val">RC / 重鉄 / Kフレ</div>
         <div class="lbl">比較構造</div>
       </div>
@@ -7689,6 +7689,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* プランカード：タブ非アクティブは非表示 */
   .plan-card.mob-hide { display: none !important; }
   .plans-grid { gap: 0 !important; padding: 0 !important; }
+
+  /* サマリーバー：スマホでは「比較構造」を非表示 */
+  .mob-hide-item { display: none !important; }
 
   /* FABボタン */
   #mob-fab {
