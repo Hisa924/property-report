@@ -7730,19 +7730,23 @@ document.addEventListener('DOMContentLoaded', () => {
 (function() {
   if (window.innerWidth > 768) return;
 
-  // ボトムシートの中にハンドル＋タブを注入
   const rp = document.getElementById('rightPanel');
   if (!rp) return;
 
+  // mob-sheet-head（中身なし・互換用）
   const head = document.createElement('div');
   head.id = 'mob-sheet-head';
-  head.innerHTML = '<div class="mob-drag-bar"></div><button id="mob-sheet-close" onclick="mobSheetClose()">✕</button>';
-
   const tabs = document.createElement('div');
   tabs.id = 'mob-plan-tabs';
-
   rp.insertBefore(tabs, rp.firstChild);
   rp.insertBefore(head, rp.firstChild);
+
+  // ×ボタンをbody直下に独立注入（#mob-sheet-headの外）
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'mob-sheet-close';
+  closeBtn.textContent = '✕';
+  closeBtn.setAttribute('onclick', 'mobSheetClose()');
+  document.body.appendChild(closeBtn);
 })();
 
 function mobCalc() {
