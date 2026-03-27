@@ -7665,20 +7665,20 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 -4px 28px rgba(0,0,0,.22) !important;
   }
 
-  /* ボトムシート内部 - ヘッダー行は高さ0、×ボタンだけ右上に絶対配置 */
-  #mob-sheet-head {
-    height: 0 !important; padding: 0 !important; overflow: visible !important;
-    position: sticky !important; top: 0 !important; z-index: 20 !important;
-  }
+  /* ボトムシート内部 - ヘッダー行は非表示 */
+  #mob-sheet-head { display: none !important; }
   .mob-drag-bar { display: none !important; }
+  /* ×ボタン：fixed で viewport 右上に常時表示（シート開閉と連動） */
   #mob-sheet-close {
-    position: absolute !important; top: 10px !important; right: 10px !important;
-    background: rgba(240,240,240,0.92) !important; border: none !important;
-    border-radius: 50% !important; width: 30px !important; height: 30px !important;
-    font-size: 16px !important; color: #555 !important; cursor: pointer !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
+    display: none;
+    position: fixed !important; top: 12px !important; right: 12px !important;
+    z-index: 700 !important;
+    background: rgba(240,240,240,0.95) !important; border: none !important;
+    border-radius: 50% !important; width: 32px !important; height: 32px !important;
+    font-size: 17px !important; color: #444 !important; cursor: pointer !important;
+    align-items: center !important; justify-content: center !important;
     padding: 0 !important; line-height: 1 !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,.15) !important;
+    box-shadow: 0 1px 5px rgba(0,0,0,.18) !important;
   }
 
   /* プランタブ（スクロールしても追従しないようにrelative） */
@@ -7764,6 +7764,8 @@ function mobSheetOpen() {
   rp.scrollTop = 0;  // 計算後にスクロール位置が残らないようリセット
   const ov = document.getElementById('mob-overlay');
   if (ov) { ov.style.display = 'block'; }
+  const btn = document.getElementById('mob-sheet-close');
+  if (btn) { btn.style.display = 'flex'; }
   document.body.style.overflow = 'hidden';
 }
 
@@ -7771,6 +7773,8 @@ function mobSheetClose() {
   document.querySelector('.right-panel').classList.remove('mob-open');
   const ov = document.getElementById('mob-overlay');
   if (ov) { ov.style.display = 'none'; }
+  const btn = document.getElementById('mob-sheet-close');
+  if (btn) { btn.style.display = 'none'; }
   document.body.style.overflow = '';
 }
 
