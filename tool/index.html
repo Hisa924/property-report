@@ -7665,20 +7665,21 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 -4px 28px rgba(0,0,0,.22) !important;
   }
 
-  /* ボトムシート内部 - ヘッダー行は非表示 */
+  /* ボトムシート内部 */
   #mob-sheet-head { display: none !important; }
   .mob-drag-bar { display: none !important; }
-  /* ×ボタン：fixed で viewport 右上に常時表示（シート開閉と連動） */
+  /* ×ボタン：シート内でstickyに右上へ */
   #mob-sheet-close {
-    display: none;
-    position: fixed !important; top: 12px !important; right: 12px !important;
-    z-index: 700 !important;
+    position: sticky !important; top: 8px !important;
+    float: right !important; margin: 8px 10px 0 0 !important;
+    z-index: 20 !important;
     background: rgba(240,240,240,0.95) !important; border: none !important;
     border-radius: 50% !important; width: 32px !important; height: 32px !important;
     font-size: 17px !important; color: #444 !important; cursor: pointer !important;
-    align-items: center !important; justify-content: center !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
     padding: 0 !important; line-height: 1 !important;
     box-shadow: 0 1px 5px rgba(0,0,0,.18) !important;
+    flex-shrink: 0 !important;
   }
 
   /* プランタブ（スクロールしても追従しないようにrelative） */
@@ -7733,20 +7734,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const rp = document.getElementById('rightPanel');
   if (!rp) return;
 
-  // mob-sheet-head（中身なし・互換用）
-  const head = document.createElement('div');
-  head.id = 'mob-sheet-head';
-  const tabs = document.createElement('div');
-  tabs.id = 'mob-plan-tabs';
-  rp.insertBefore(tabs, rp.firstChild);
-  rp.insertBefore(head, rp.firstChild);
-
-  // ×ボタンをbody直下に独立注入（#mob-sheet-headの外）
+  // ×ボタンとプランタブをシート内に注入
   const closeBtn = document.createElement('button');
   closeBtn.id = 'mob-sheet-close';
   closeBtn.textContent = '✕';
   closeBtn.setAttribute('onclick', 'mobSheetClose()');
-  document.body.appendChild(closeBtn);
+
+  const tabs = document.createElement('div');
+  tabs.id = 'mob-plan-tabs';
+
+  rp.insertBefore(tabs, rp.firstChild);
+  rp.insertBefore(closeBtn, rp.firstChild);
 })();
 
 function mobCalc() {
@@ -7765,11 +7763,9 @@ function mobCalc() {
 function mobSheetOpen() {
   const rp = document.querySelector('.right-panel');
   rp.classList.add('mob-open');
-  rp.scrollTop = 0;  // 計算後にスクロール位置が残らないようリセット
+  rp.scrollTop = 0;
   const ov = document.getElementById('mob-overlay');
   if (ov) { ov.style.display = 'block'; }
-  const btn = document.getElementById('mob-sheet-close');
-  if (btn) { btn.style.display = 'flex'; }
   document.body.style.overflow = 'hidden';
 }
 
@@ -7777,8 +7773,6 @@ function mobSheetClose() {
   document.querySelector('.right-panel').classList.remove('mob-open');
   const ov = document.getElementById('mob-overlay');
   if (ov) { ov.style.display = 'none'; }
-  const btn = document.getElementById('mob-sheet-close');
-  if (btn) { btn.style.display = 'none'; }
   document.body.style.overflow = '';
 }
 
