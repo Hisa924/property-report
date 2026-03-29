@@ -122,12 +122,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
   </div>
   <div class="header-stats">
     <div class="stat"><div class="stat-num">45</div><div class="stat-label">収集件数</div></div>
-    <div class="stat"><div class="stat-num">4</div><div class="stat-label">有望物件（B以上）</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">有望物件（B以上）</div></div>
     <div class="stat"><div class="stat-num">6.8%</div><div class="stat-label">最高利回り</div></div>
   </div>
   <div class="rank-summary"><span class="rank-badge rank-A">A 1件</span>
+<span class="rank-badge rank-A">A- 1件</span>
 <span class="rank-badge rank-B">B 3件</span>
-<span class="rank-badge rank-NG">その他 41件</span></div>
+<span class="rank-badge rank-NG">その他 40件</span></div>
   <div class="history-nav">
     <div class="history-label">過去7日間</div>
     <div class="history-days"><a class="day-chip active" href="reports/2026-03-29.html"><div class="day-chip-date">3/29（日）</div><div class="day-chip-count">45件</div></a>
@@ -159,11 +160,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 <div class="grid" id="grid"></div>
 
 <script>
-const RANK_ORDER = {"A+":0,"A":1,"B+":2,"B":3,"B-":4,"C+":5,"C":6,"D+":7,"D":8,"NG":9};
+const RANK_ORDER = {"A+":0,"A":1,"A-":2,"B+":3,"B":4,"B-":5,"C+":6,"C":7,"C-":8,"D+":9,"D":10,"D-":11,"NG":12};
 
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function fman(v){return v>=10000?(v/10000).toFixed(1)+"億円":v.toLocaleString()+"万円";}
-function rankCls(r){return{["A+"]:"Aplus",A:"A","B+":"Bplus",B:"B","B-":"B"}[r]||"NG";}
+function rankCls(r){
+  if(r==="A+")return"Aplus";
+  if(r==="A"||r==="A-")return"A";
+  if(r==="B+")return"Bplus";
+  if(r==="B"||r==="B-")return"B";
+  return"NG";
+}
 
 function buildCard(p){
   const rc = rankCls(p.rank);
@@ -273,7 +280,7 @@ function filterRank(f,btn){
     const r=card.dataset.rank;
     let show=false;
     if(f==="all") show=true;
-    else if(f==="bplus") show=["A+","A","B+"].includes(r);
+    else if(f==="bplus") show=["A+","A","A-","B+"].includes(r);
     else if(f==="b") show=["B","B-"].includes(r);
     else if(f==="ng") show=true;
     card.style.display=show?"":"none";
@@ -373,6 +380,8 @@ document.addEventListener("touchstart",function(e){
 
 renderAll();
 initSwipes();
+
+
 </script>
 </body>
 </html>
