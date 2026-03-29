@@ -147,6 +147,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
     <option value="yield">利回り順</option>
     <option value="price_asc">価格 安い順</option>
     <option value="price_desc">価格 高い順</option>
+    <option value="area_desc">面積 広い順</option>
+    <option value="far_desc">容積率 高い順</option>
   </select>
 </div>
 
@@ -232,7 +234,7 @@ function buildCard(p){
     ? imgHtml.replace('</div>', overlayInner+'</div>')
     : imgHtml;
 
-  return `<div class="card" data-rank="${esc(p.rank)}" data-yield="${p.best_yield}" data-price="${p.price_man}">
+  return `<div class="card" data-rank="${esc(p.rank)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}">
   ${wrapOpen}
     ${finalImgHtml}
     ${(p.imgs&&p.imgs.length<=1)?overlayInner:""}
@@ -289,6 +291,8 @@ function sortCards(by){
     if(by==="yield") return parseFloat(b.dataset.yield)-parseFloat(a.dataset.yield);
     if(by==="price_asc") return parseFloat(a.dataset.price)-parseFloat(b.dataset.price);
     if(by==="price_desc") return parseFloat(b.dataset.price)-parseFloat(a.dataset.price);
+    if(by==="area_desc") return parseFloat(b.dataset.area)-parseFloat(a.dataset.area);
+    if(by==="far_desc") return parseFloat(b.dataset.far)-parseFloat(a.dataset.far);
   });
   cards.forEach(c=>grid.appendChild(c));
 }
