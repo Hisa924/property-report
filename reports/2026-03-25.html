@@ -128,7 +128,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
   <div class="rank-summary"><span class="rank-badge rank-Bplus">B+ 1件</span>
 <span class="rank-badge rank-B">B 2件</span>
 <span class="rank-badge rank-NG">その他 26件</span></div>
-  <div class="history-nav"><div class="history-label">過去の結果</div><div class="history-days"><a href="../index.html" style="color:rgba(255,255,255,.55);font-size:12px;text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,.2);border-radius:8px;display:inline-block">← 最新の結果へ</a></div></div></div>
+  <div class="history-nav"><div class="history-label">過去7日間</div><div class="history-days"><span id="dynChips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div></div></div></div>
 </div>
 
 <div class="filter-bar">
@@ -363,6 +363,42 @@ document.addEventListener("touchstart",function(e){
 
 renderAll();
 initSwipes();
+</script>
+
+<script>
+(function(){
+  const container = document.getElementById('dynChips');
+  if (!container) return;
+  const DAYS = ['日','月','火','水','木','金','土'];
+  const currentDate = location.pathname.split('/').pop().replace('.html','');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  function buildChips(hist) {
+    container.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const dateStr = y+'-'+m+'-'+day;
+      const label = (d.getMonth()+1)+'/'+d.getDate()+'（'+DAYS[d.getDay()]+'）';
+      const isActive = dateStr === currentDate;
+      const href = i === 0 ? '../index.html' : dateStr+'.html';
+      const info = hist ? hist[dateStr] : null;
+      const count = info && info.total > 0 ? info.total : 0;
+      const txt = count > 0 ? count+'件' : '—';
+      const zero = count === 0 ? ' zero' : '';
+      const a = document.createElement('a');
+      a.className = 'day-chip' + (isActive ? ' active' : '');
+      a.href = href;
+      a.innerHTML = '<div class="day-chip-date">'+label+'</div><div class="day-chip-count'+zero+'">'+txt+'</div>';
+      container.appendChild(a);
+    }
+  }
+  buildChips(null);
+  fetch('history.json').then(function(r){ return r.json(); }).then(function(hist){ buildChips(hist); }).catch(function(){});
+})();
 </script>
 </body>
 </html>
