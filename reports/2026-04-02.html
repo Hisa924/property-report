@@ -140,9 +140,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
   <button class="filter-btn rank-filter" onclick="filterRank('b',this)">B</button>
   <button class="filter-btn rank-filter" onclick="filterRank('ng',this)">NG含む</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
-  <span class="filter-label">サイト</span>
+  <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap"><span class="filter-label" style="margin:0">サイト</span>
   <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
-  <div id="site-filter-btns" style="display:inline-flex;gap:6px;flex-wrap:wrap"></div>
+  <div id="site-filter-btns" style="display:inline-flex;gap:6px"></div></div>
   <span class="count-label" id="count-label"></span>
   <select class="sort-select" onchange="sortCards(this.value)">
     <option value="rank">ランク順</option>
@@ -286,10 +286,11 @@ function renderAll(){
   const sorted=[...DATA].sort((a,b)=>(RANK_ORDER[a.rank]??9)-(RANK_ORDER[b.rank]??9)||b.best_yield-a.best_yield);
   document.getElementById("grid").innerHTML=sorted.map(buildCard).join("");
   // サイトフィルターボタンを動的生成
+  const SHORT_SITE={"アットホーム":"アットH","三井のリハウス":"三井","住友不動産販売":"住友"};
   const sites=[...new Set(DATA.map(p=>p.site).filter(Boolean))].sort();
   const container=document.getElementById("site-filter-btns");
   container.innerHTML=sites.map(s=>
-    `<button class="filter-btn site-filter" onclick="filterSite('${s.replace(/'/g,"\'")}',null,this)">${esc(s)}</button>`
+    `<button class="filter-btn site-filter" onclick="filterSite('${s.replace(/'/g,"\'")}',null,this)">${esc(SHORT_SITE[s]||s)}</button>`
   ).join("");
   updateCount();
 }
