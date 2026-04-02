@@ -4353,10 +4353,33 @@ async function _fetchAvailableModels(key) {
     });
 }
 
-let _geminiModelFallbackCount = 0;
+// モデルが利用可能か事前チェックし、ダメなら自動切替して有効なモデル名を返す
+async function _ensureModel(key, model) {
+  // モデルの情報を取得して存在確認（軽量なGETリクエスト）
+  try {
+    const check = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${key}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (check.ok) return model; // 利用可能
+  } catch { /* タイムアウトまたはネットワークエラー → フォールバックへ */ }
+
+  // 利用不可 → 使えるモデル一覧を取得して切替
+  console.warn(`モデル「${model}」利用不可 → 自動検出中...`);
+  const available = await _fetchAvailableModels(key);
+  const next = available.find(m => m !== model);
+  if (!next) throw new Error('利用可能なモデルが見つかりません。\n設定（⚙）の「自動検出」でモデルを選び直してください。');
+  console.warn(`→ 「${next}」に自動切替`);
+  const s = loadSettings(); s.geminiModel = next; localStorage.setItem('mansionToolSettings', JSON.stringify(s));
+  return next;
+}
+
 async function callGeminiApi(parts, logType) {
-  const { geminiApiKey: key, geminiModel: model = 'gemini-2.0-flash-lite' } = loadSettings();
+  const { geminiApiKey: key, geminiModel: savedModel = 'gemini-2.0-flash-lite' } = loadSettings();
   if (!key) throw new Error('Gemini APIキーが未設定です\n\n設定（⚙）からAPIキーを登録してください。\nGoogle AI Studio（aistudio.google.com）で無料取得できます。');
+
+  // 事前にモデルの利用可否を確認、ダメなら自動切替
+  const model = await _ensureModel(key, savedModel);
 
   const MAX_RETRIES = 3;
   const RETRY_DELAY_MS = [5000, 10000, 20000]; // 5秒 → 10秒 → 20秒
@@ -4379,27 +4402,6 @@ async function callGeminiApi(parts, logType) {
       const msg = err.error?.message || `HTTP ${res.status}`;
       if (res.status === 400 && msg.includes('API_KEY'))
         throw new Error('APIキーが無効です。設定を確認してください。');
-      if (msg.includes('no longer available') || msg.includes('deprecated') || msg.includes('not found')) {
-        if (_geminiModelFallbackCount >= 3) {
-          _geminiModelFallbackCount = 0;
-          throw new Error(`利用可能なモデルが見つかりません。\n設定（⚙）の「自動検出」でモデルを選び直してください。`);
-        }
-        // APIから利用可能モデルを取得して自動切り替え
-        const available = await _fetchAvailableModels(key);
-        const tried = new Set(JSON.parse(sessionStorage.getItem('_triedModels') || '[]'));
-        tried.add(model);
-        const next = available.find(m => !tried.has(m));
-        if (next) {
-          sessionStorage.setItem('_triedModels', JSON.stringify([...tried]));
-          _geminiModelFallbackCount++;
-          console.warn(`モデル「${model}」利用不可 → 「${next}」に自動切替`);
-          const s = loadSettings(); s.geminiModel = next; localStorage.setItem('mansionToolSettings', JSON.stringify(s));
-          return callGeminiApi(parts, logType);
-        }
-        _geminiModelFallbackCount = 0;
-        sessionStorage.removeItem('_triedModels');
-        throw new Error(`利用可能なモデルが見つかりません。\n設定（⚙）の「自動検出」でモデルを選び直してください。`);
-      }
       if (msg.includes('quota') || msg.includes('Quota') || msg.includes('RESOURCE_EXHAUSTED'))
         throw new Error(`無料枠の上限に達しました。\nGoogle Cloud Console でbillingを有効にするか、しばらく待ってから再試行してください。`);
       // 高負荷・一時的エラー（503 / 429 / "high demand"）はリトライ
@@ -4448,8 +4450,10 @@ async function fetchMarketRents(address, unitTypesWithAreas) {
   if (!key) throw new Error('Gemini APIキーが未設定です\n設定（⚙）からAPIキーを登録してください。');
 
   // グラウンディングは flash-lite 非対応のため自動アップグレード
-  let model = geminiModel || 'gemini-2.0-flash';
-  if (model.includes('flash-lite')) model = 'gemini-2.0-flash';
+  let savedModel = geminiModel || 'gemini-2.0-flash';
+  if (savedModel.includes('flash-lite')) savedModel = 'gemini-2.0-flash';
+  // 事前にモデルの利用可否を確認、ダメなら自動切替
+  const model = await _ensureModel(key, savedModel);
 
   const typesDesc = unitTypesWithAreas
     .map(({ type, area }) => `${type}（約${area}㎡）`)
@@ -4478,28 +4482,6 @@ async function fetchMarketRents(address, unitTypesWithAreas) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const msg = err.error?.message || `HTTP ${res.status}`;
-    // モデル利用不可 → APIから利用可能モデルを取得して自動切替
-    if (msg.includes('no longer available') || msg.includes('deprecated') || msg.includes('not found')) {
-      if (_geminiModelFallbackCount >= 3) {
-        _geminiModelFallbackCount = 0;
-        throw new Error(`利用可能なモデルが見つかりません。\n設定（⚙）の「自動検出」でモデルを選び直してください。`);
-      }
-      const available = await _fetchAvailableModels(key);
-      const tried = new Set(JSON.parse(sessionStorage.getItem('_triedModels') || '[]'));
-      tried.add(model);
-      // グラウンディングはflash-lite非対応のためflash-lite以外を選ぶ
-      const next = available.find(m => !tried.has(m) && !m.includes('flash-lite'));
-      if (next) {
-        sessionStorage.setItem('_triedModels', JSON.stringify([...tried]));
-        _geminiModelFallbackCount++;
-        console.warn(`モデル「${model}」利用不可 → 「${next}」に自動切替`);
-        const s = loadSettings(); s.geminiModel = next; localStorage.setItem('mansionToolSettings', JSON.stringify(s));
-        return fetchMarketRents(address, unitTypesWithAreas);
-      }
-      _geminiModelFallbackCount = 0;
-      sessionStorage.removeItem('_triedModels');
-      throw new Error(`利用可能なモデルが見つかりません。\n設定（⚙）の「自動検出」でモデルを選び直してください。`);
-    }
     if (msg.includes('high demand') || res.status === 503)
       throw new Error('APIサーバーが混雑しています。しばらく待ってから再試行してください。');
     throw new Error(msg);
