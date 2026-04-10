@@ -73,5 +73,10 @@
     "total": 42,
     "ranked": 5,
     "best_yield": 8.0
+  },
+  "2026-04-10": {
+    "total": 8,
+    "ranked": 1,
+    "best_yield": 7.2
   }
 }
