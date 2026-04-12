@@ -7332,18 +7332,14 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
               const dispRent = (ov != null) ? ov : u.rent;
               return (i > 0 ? '<span class="unit-plus">＋</span>' : '') +
                 '<span class="unit-chip ' + cls + '"><span class="unit-chip-label"><span class="unit-type-tap" onclick="event.stopPropagation();showTypeChanger(' + planIdx + ',' + i + ',this)" style="cursor:pointer;text-decoration:underline dotted">' + u.type + '</span> <span class="unit-area-tap" onclick="event.stopPropagation();editUnitArea(' + planIdx + ',' + i + ',this)" style="cursor:pointer;text-decoration:underline dotted">' + fmt(u.area, 1) + '㎡</span></span> ' +
-                '<span class="rent-stepper">' +
                 '<input class="floor-rent-input" type="number" step="0.5" min="0"' +
                 ' data-plan-idx="' + planIdx + '"' +
                 ' data-floor-idxs="' + floorIdxsStr + '"' +
                 ' data-unit-idx="' + i + '"' +
                 ' data-type="' + u.type + '"' +
                 ' value="' + fmt(dispRent, 1) + '"' +
-                ' onchange="onFloorRentInput(this)">' +
-                '<span class="rent-step-btns">' +
-                '<button class="rent-step-btn" tabindex="-1" onclick="onFloorRentStep(this,0.5);event.stopPropagation()">▲</button>' +
-                '<button class="rent-step-btn" tabindex="-1" onclick="onFloorRentStep(this,-0.5);event.stopPropagation()">▼</button>' +
-                '</span></span>万</span>';
+                ' oninput="onFloorRentInput(this)"' +
+                ' onclick="event.stopPropagation()">万</span>';
             }).join('');
             const floorGroupTotal = floor.units.reduce(function(sum, u, ui) {
               const ov = floorRentOverrides[fi0] && floorRentOverrides[fi0][ui];
@@ -7873,7 +7869,7 @@ function onFloorRentInput(inp) {
       '.floor-rent-input[data-floor-idxs="' + floorIdxsStr + '"][data-unit-idx="' + unitIdx + '"]'
     );
     if (focusInp) focusInp.focus();
-  }, 300);
+  }, 800);
 }
 
 function refreshCard(planIdx) {
