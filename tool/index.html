@@ -1069,26 +1069,26 @@
       text-align: left;
       line-height: 1.5;
     }
-    /* 部屋数 ±ボタン */
-    .unit-adjust-btns {
-      display: flex;
+    /* 部屋数 ±ボタン（インライン） */
+    .unit-adjust-inline {
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      margin-top: 4px;
+      gap: 4px;
     }
-    .unit-adjust-btns button {
-      width: 28px; height: 28px;
+    .unit-adj-btn {
+      width: 24px; height: 24px;
       border: 1.5px solid var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
       background: var(--bg);
       color: var(--text);
-      font-size: 16px; font-weight: 700;
+      font-size: 14px; font-weight: 700;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       transition: background 0.15s, border-color 0.15s;
       -webkit-tap-highlight-color: transparent;
+      vertical-align: middle;
     }
-    .unit-adjust-btns button:active {
+    .unit-adj-btn:active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
@@ -6858,6 +6858,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           <div class="card-plan-name">${plan.name}</div>
           <div class="card-header-plan-detail">${(() => {
             const b = r.hasBasement ? '+B1' : '';
+            const unitBtns = `<span class="unit-adjust-inline"><button class="unit-adj-btn" onclick="event.stopPropagation();removeUnit(${planIdx})" title="1戸減らす">−</button> ${r.unitsPerFloor}戸 <button class="unit-adj-btn" onclick="event.stopPropagation();showUnitTypePicker(${planIdx})" title="1戸追加">＋</button></span>`;
             if (_customPlanActive && _customFloorGroupsActive && _customFloorGroupsActive.length > 0) {
               const groups = _customFloorGroupsActive;
               return groups.map((g, i) => {
@@ -6865,17 +6866,12 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                 const gUnits  = g.units.length;
                 const isLast  = i === groups.length - 1;
                 return isLast
-                  ? `${gUnits}戸/階 × ${gFloors}階<br>${r.unitCount}戸プラン`
+                  ? `${gUnits}戸/階 × ${gFloors}階<br>合計${r.unitCount}戸プラン`
                   : `${gUnits}戸/階 × ${gFloors}階`;
               }).join('<br>');
             }
-            return `${r.unitsPerFloor}戸/階 × ${r.aboveFloors}${b}階<br>${r.unitCount}戸プラン`;
+            return `${unitBtns}/階 × ${r.aboveFloors}${b}階<br>合計${r.unitCount}戸プラン`;
           })()}
-          <div class="unit-adjust-btns">
-            <button class="unit-minus-btn" onclick="event.stopPropagation();removeUnit(${planIdx})" title="1戸減らす">−</button>
-            <span class="unit-adjust-label">${r.unitsPerFloor}戸/階</span>
-            <button class="unit-plus-btn" onclick="event.stopPropagation();showUnitTypePicker(${planIdx})" title="1戸追加">＋</button>
-          </div>
           </div>
         </div>
         <div class="card-header-row2">
