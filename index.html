@@ -32,6 +32,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 .day-chip-count{font-size:13px;font-weight:700;color:white;margin-top:1px}
 .day-chip.active .day-chip-count{color:#1a1a2e}
 .day-chip-count.zero{color:rgba(255,255,255,.3);font-weight:400;font-size:11px}
+.past-btn{padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;align-self:center}
+.past-btn:hover{background:rgba(255,255,255,.18)}
+.cal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center}.cal-overlay.open{display:flex}
+.cal-box{background:#1e1e34;border-radius:14px;padding:20px;min-width:300px;max-width:340px;color:white;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cal-header button{background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:4px 10px;border-radius:6px}.cal-header button:hover{background:rgba(255,255,255,.15)}
+.cal-title{font-size:15px;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-dow{font-size:10px;color:rgba(255,255,255,.4);padding:4px 0}
+.cal-day{font-size:13px;padding:6px 2px;border-radius:6px;cursor:default;color:rgba(255,255,255,.25)}
+.cal-day.has-data{cursor:pointer;color:white;background:rgba(255,255,255,.08)}.cal-day.has-data:hover{background:#4fc3f7;color:#1a1a2e}
+.cal-day.today{border:1px solid #4fc3f7}
+.cal-day .cal-count{font-size:9px;color:rgba(255,255,255,.4);display:block;margin-top:1px}.cal-day.has-data .cal-count{color:rgba(255,255,255,.6)}
 .filter-bar{background:white;padding:12px 32px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #e0e0e0;flex-wrap:wrap}
 .filter-label{font-size:12px;color:#888;font-weight:600}
 .filter-btn{padding:6px 14px;border:1px solid #ddd;border-radius:20px;background:white;font-size:12px;cursor:pointer;transition:all .2s}
@@ -139,7 +152,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 <a class="day-chip" href="reports/2026-04-08.html"><div class="day-chip-date">4/8（水）</div><div class="day-chip-count">33件</div></a>
 <a class="day-chip" href="reports/2026-04-07.html"><div class="day-chip-date">4/7（火）</div><div class="day-chip-count">43件</div></a>
 <a class="day-chip" href="reports/2026-04-06.html"><div class="day-chip-date">4/6（月）</div><div class="day-chip-count">52件</div></a>
+<button class="past-btn" onclick="openCal()">過去 ▼</button></div>
+  </div>
 </div>
+
+<div class="cal-overlay" id="calOverlay" onclick="if(event.target.id==='calOverlay')closeCal()">
+  <div class="cal-box">
+    <div class="cal-header">
+      <button onclick="calNav(-1)">&#8249;</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button onclick="calNav(1)">&#8250;</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
   </div>
 </div>
 
@@ -427,6 +451,52 @@ document.addEventListener("touchstart",function(e){
   const img=e.target;
   if(img.tagName==="IMG")img._tx=e.changedTouches[0].clientX;
 },{passive:true});
+
+// ── カレンダー ──────────────────────────────
+let _calHist=null, _calY=0, _calM=0;
+const _isReport = location.pathname.includes('/reports/');
+
+function _calBasePath(){ return _isReport ? '' : 'reports/'; }
+
+function openCal(){
+  const now=new Date();
+  _calY=now.getFullYear(); _calM=now.getMonth();
+  if(_calHist){ _renderCal(); document.getElementById('calOverlay').classList.add('open'); return; }
+  const histPath = _isReport ? 'history.json?v='+Date.now() : 'reports/history.json?v='+Date.now();
+  fetch(histPath).then(r=>r.json()).then(h=>{
+    _calHist=h; _renderCal();
+    document.getElementById('calOverlay').classList.add('open');
+  }).catch(()=>{ _calHist={}; _renderCal(); document.getElementById('calOverlay').classList.add('open'); });
+}
+function closeCal(){ document.getElementById('calOverlay').classList.remove('open'); }
+function calNav(d){ _calM+=d; if(_calM<0){_calM=11;_calY--;} if(_calM>11){_calM=0;_calY++;} _renderCal(); }
+
+function _renderCal(){
+  const DOWS=['日','月','火','水','木','金','土'];
+  document.getElementById('calTitle').textContent=_calY+'年'+(_calM+1)+'月';
+  const grid=document.getElementById('calGrid');
+  let html=DOWS.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+  const first=new Date(_calY,_calM,1);
+  const lastDay=new Date(_calY,_calM+1,0).getDate();
+  const todayStr=new Date().toISOString().slice(0,10);
+  for(let i=0;i<first.getDay();i++) html+='<div class="cal-day"></div>';
+  for(let d=1;d<=lastDay;d++){
+    const ds=_calY+'-'+String(_calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const info=_calHist[ds];
+    const has=!!info;
+    const isToday=ds===todayStr;
+    const cnt=info?info.total:0;
+    const ranked=info?info.ranked:0;
+    const cls='cal-day'+(has?' has-data':'')+(isToday?' today':'');
+    if(has){
+      const href=_isReport?ds+'.html':('reports/'+ds+'.html');
+      html+='<a class="'+cls+'" href="'+href+'" style="text-decoration:none;color:inherit">'+d+'<span class="cal-count">'+cnt+'件</span></a>';
+    } else {
+      html+='<div class="'+cls+'">'+d+'</div>';
+    }
+  }
+  grid.innerHTML=html;
+}
 
 renderAll();
 initSwipes();
