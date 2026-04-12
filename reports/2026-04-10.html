@@ -28,8 +28,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 .rank-badge.rank-NG{background:#555;color:#aaa}
 .history-nav{margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
 .history-label{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:8px}
-.history-days{display:flex;gap:8px;flex-wrap:wrap}
-.day-chip{padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;text-decoration:none}
+.history-days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.day-chip{padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;text-decoration:none;text-align:center}
 .day-chip:hover{background:rgba(255,255,255,.18)}
 .day-chip.active{background:#4fc3f7;border-color:#4fc3f7}
 .day-chip-date{font-size:11px;color:rgba(255,255,255,.7)}
@@ -37,7 +37,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 .day-chip-count{font-size:13px;font-weight:700;color:white;margin-top:1px}
 .day-chip.active .day-chip-count{color:#1a1a2e}
 .day-chip-count.zero{color:rgba(255,255,255,.3);font-weight:400;font-size:11px}
-.past-btn{padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;align-self:center}
+.past-btn{padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;text-align:center}
 .past-btn:hover{background:rgba(255,255,255,.18)}
 .cal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center}.cal-overlay.open{display:flex}
 .cal-box{background:#1e1e34;border-radius:14px;padding:20px;min-width:300px;max-width:340px;color:white;box-shadow:0 12px 40px rgba(0,0,0,.5)}
@@ -154,7 +154,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 <span class="rank-badge rank-NG">その他 48件</span></div>
   <div class="history-nav">
     <div class="history-label">過去7日間</div>
-    <div class="history-days"><span id="dynChips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div>
+    <div class="history-days"><span id="dynChips" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%"></span></div>
   </div>
 </div>
 
