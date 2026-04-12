@@ -688,8 +688,8 @@
     .sb-dist-inputs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4px 16px;
-      flex: 1;
+      gap: 4px 10px;
+      max-width: 300px;
     }
     .sb-dist-item {
       display: flex;
@@ -700,11 +700,12 @@
       font-size: 10px;
       color: var(--text-sub);
       white-space: nowrap;
-      width: 46px;
+      width: 40px;
       text-align: right;
+      flex-shrink: 0;
     }
     .sb-dist-inputs .form-input {
-      width: 44px;
+      width: 40px;
       font-size: 11px;
       padding: 2px 4px;
     }
