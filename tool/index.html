@@ -3953,24 +3953,25 @@ function addUnit(planIdx, type) {
   // 新しい部屋を追加
   combo.push(type);
 
-  // 全部屋をminAreaベースで再配分（既存面積はリセット）
-  // まずタイプ固有のminAreaで試算、入らなければ均等割りで最低限チェック
-  const minAreas = combo.map(t => UNIT_TYPES[t].minArea);
-  const totalMin = minAreas.reduce((s, a) => s + a, 0);
-  const evenArea = Math.round(perFloor / combo.length * 10) / 10;
-  if (evenArea < 13) {
-    alert(`面積不足で追加できません（1戸あたり${fmt(evenArea,1)}㎡は狭すぎます）`);
+  // 新しい部屋のminAreaを確保し、残り面積を既存部屋で按分
+  const newTypeMin = UNIT_TYPES[type].minArea;
+  const remainForExisting = perFloor - newTypeMin;
+
+  if (remainForExisting < (combo.length - 1) * 13) {
+    alert(`面積不足で追加できません`);
     combo.pop();
     return;
   }
-  // minAreaベースで配分、入らなければ均等割り
-  let newAreas;
-  if (totalMin <= perFloor) {
-    const remainder = perFloor - totalMin;
-    newAreas = minAreas.map(m => Math.round((m + remainder / combo.length) * 10) / 10);
-  } else {
-    // 均等割り（タイプのminAreaに収まらなくても許容）
-    newAreas = combo.map(() => evenArea);
+
+  // 既存部屋の現在面積の比率で残り面積を按分
+  const oldTotal = areas.reduce((s, a) => s + a, 0);
+  const newAreas = areas.map(a => Math.round(remainForExisting * a / oldTotal * 10) / 10);
+  newAreas.push(newTypeMin);
+
+  // 余り面積を新しい部屋に加算（端数調整）
+  const used = newAreas.reduce((s, a) => s + a, 0);
+  if (perFloor - used > 0.1) {
+    newAreas[newAreas.length - 1] = Math.round((newAreas[newAreas.length - 1] + perFloor - used) * 10) / 10;
   }
 
   _applyUnitChange(planIdx, combo, newAreas);
