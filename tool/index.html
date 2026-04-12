@@ -4246,9 +4246,14 @@ function _syncCustomPlanUI(combo, areas) {
 
 function _refreshAllCardsWithOpts() {
   if (!_lastPlans || _lastPlans.length === 0) {
-    // まだ一度も計算していない場合は先に calculate() を実行
+    // まだ一度も計算していない場合は先に calculate() を実行してカードを生成
     calculate();
-    return;
+    // calculate() 後に _lastPlans が生成されるので、希望プランを適用するため再実行
+    if (_customPlanActive && _lastPlans && _lastPlans.length > 0) {
+      // 再帰せず下に続行
+    } else {
+      return;
+    }
   }
 
   // 全カードを再計算
