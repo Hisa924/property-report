@@ -5604,23 +5604,27 @@ function calcPlan(planConfig, allRents) {
     : Math.min(bcrRatio * 100, maxBCR);
 
   // Building area per floor
-  let buildingArea1F = effectiveLandArea * consumedBCR / 100;
+  const bcrArea = effectiveLandArea * consumedBCR / 100;
+  let buildingArea1F = bcrArea;
 
-  // 後退距離ベースの場合: 間口・奥行から壁面後退を引いた面積に置き換え（法定最大建蔽率でキャップ）
-  // 旧実装は「distArea < bcrArea のときだけキャップ」だったため、
-  // 典型的な 0.5m 後退では distArea > bcrArea となり実質無効だったバグを修正。
-  // ※ distArea=0 の場合（北側後退距離が間口・奥行を超える等）は dist 計算をスキップして
-  //   BCR ベースの buildingArea1F をそのまま維持する（0㎡表示バグ防止）
-  if (planConfig.setbackMode === 'dist' && planConfig.setbacks && frontage > 0 && depth > 0) {
+  // 両方計算して小さい方を採用（どちらが律速かを自動判定）
+  let effectiveMode = 'bcr';  // 実際に律速しているモード
+  let distArea = 0;
+  if (planConfig.setbacks && frontage > 0 && depth > 0) {
     const sb = planConfig.setbacks;
     const effW = Math.max(0, frontage - (sb.left || 0) - (sb.right || 0));
     const effD = Math.max(0, depth - (sb.front || 0) - (sb.rear || 0));
-    const distArea = Math.max(0, effW * effD);
+    distArea = Math.max(0, effW * effD);
     if (distArea > 0) {
       const maxLegalArea = effectiveLandArea * maxBCR / 100;
-      buildingArea1F = Math.min(distArea, maxLegalArea);
+      const cappedDistArea = Math.min(distArea, maxLegalArea);
+      if (cappedDistArea < bcrArea) {
+        // 後退距離が律速
+        buildingArea1F = cappedDistArea;
+        effectiveMode = 'dist';
+      }
+      // BCRが律速の場合はbcrAreaのまま
     }
-    // distArea=0 のとき: 後退距離が間口/奥行を超えて建物が入らない → BCR ベースを維持
   }
 
   // Shadow regulation → max floors
@@ -5836,7 +5840,7 @@ function calcPlan(planConfig, allRents) {
   // dist モードでは buildingArea1F が直接設定されるため、上下両方向に同期する
   if (effectiveLandArea > 0) {
     const actualBCR = Math.round((buildingArea1F / effectiveLandArea * 100) * 10) / 10;
-    if (planConfig.setbackMode === 'dist' || actualBCR < consumedBCR) {
+    if (effectiveMode === 'dist' || actualBCR < consumedBCR) {
       consumedBCR = actualBCR;
     }
   }
@@ -6106,6 +6110,8 @@ function calcPlan(planConfig, allRents) {
     floorCombo,
     floorComboAreas,
     consumedBCR,
+    effectiveMode,
+    distArea: Math.round(distArea * 10) / 10,
     unitCount: finalUnitCount,
     unitsPerFloor,
     floorBreakdown,
@@ -7058,7 +7064,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           const evTag     = r.hasEV ? '<span class="ab-ev-tag">＋EV 6㎡</span>' : '';
           // カード個別セットバック設定（auto-setback含む）
           const sbCard  = getCardSetbacks(planIdx);
-          const isBcr   = sbCard.mode !== 'dist';
+          const isBcr   = r.effectiveMode !== 'dist';
           // 形状入力から建築面積を計算（参考値）: カードのsetback値を使用
           const fi  = parseFloat(document.getElementById('frontage')?.value) || 0;
           const di  = parseFloat(document.getElementById('depth')?.value) || 0;
@@ -7145,7 +7151,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                 <span class="ab-ratio-pct">㎡</span>
               </span>
             </div>
-            ${!isBcr ? `<div style="font-size:10px;color:#888;margin:2px 0 0 22px">実消化建ぺい率: ${fmt(consumedBCR, 1)}% （建築面積 ${fmt(r.buildingArea1F, 1)}㎡）</div>` : ''}
+            ${isBcr && r.distArea > 0 && r.distArea > r.buildingArea1F ? `<div style="font-size:10px;color:#888;margin:2px 0 0 22px">※ 容積率制限により後退距離(${fmt(r.distArea, 1)}㎡)より小さい値で計算</div>` : ''}
             <!-- 後退距離ベース -->
             <div class="sb-mode-row ${!isBcr ? 'active' : 'inactive'} ${fi <= 0 || di <= 0 ? 'sb-mode-disabled' : ''}" onclick="trySetDistMode(${planIdx})">
               <div class="sb-radio-dot"></div>
