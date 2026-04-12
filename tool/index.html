@@ -6866,11 +6866,11 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                 const gUnits  = g.units.length;
                 const isLast  = i === groups.length - 1;
                 return isLast
-                  ? `${gUnits}戸/階 × ${gFloors}階<br>合計：${r.aboveFloors}${b}階　${r.unitCount}戸プラン`
+                  ? `${gUnits}戸/階 × ${gFloors}階<br>${r.unitCount}戸プラン`
                   : `${gUnits}戸/階 × ${gFloors}階`;
               }).join('<br>');
             }
-            return `${r.unitsPerFloor}戸/階 × ${r.aboveFloors}${b}階<br>合計：${r.aboveFloors}${b}階　${r.unitCount}戸プラン`;
+            return `${r.unitsPerFloor}戸/階 × ${r.aboveFloors}${b}階<br>${r.unitCount}戸プラン`;
           })()}
           <div class="unit-adjust-btns">
             <button class="unit-minus-btn" onclick="event.stopPropagation();removeUnit(${planIdx})" title="1戸減らす">−</button>
