@@ -6197,6 +6197,7 @@ function findBestLayout(structureKey, allRents, options = {}) {
       manualBcrRatio:        options.manualBcrRatio  || 0,
       manualExitCR:          options.manualExitCR   || 0,
       perFloorGroupsOverride: groups,
+      floorCountOverride:    options.floorCountOverride || 0,
       setbackMode:           options.setbackMode    || 'bcr',
       setbacks:              options.setbacks       || null,
     };
@@ -6219,6 +6220,7 @@ function findBestLayout(structureKey, allRents, options = {}) {
       manualExitCR:           options.manualExitCR    || 0,
       floorComboOverride:     options.floorComboOverride,
       floorComboAreasOverride: options.floorComboAreasOverride,
+      floorCountOverride:     options.floorCountOverride || 0,
       setbackMode:            options.setbackMode     || 'bcr',
       setbacks:               options.setbacks        || null,
     };
