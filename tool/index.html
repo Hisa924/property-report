@@ -686,16 +686,22 @@
       height: auto;
     }
     .sb-dist-inputs {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
       flex: 1;
+    }
+    .sb-dist-item {
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
     .sb-dist-dir {
       font-size: 10px;
       color: var(--text-sub);
       white-space: nowrap;
+      width: 46px;
+      text-align: right;
     }
     .sb-dist-inputs .form-input {
       width: 44px;
@@ -6991,18 +6997,18 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
               ${fi <= 0 || di <= 0
                 ? `<span class="sb-dist-na">（間口平均・奥行平均を入力してください）</span>`
                 : `<span class="sb-dist-inputs">
-                <span class="sb-dist-dir">前面<small style="color:#999;font-size:9px">(${_dFront})</small></span>
+                <span class="sb-dist-item"><span class="sb-dist-dir">前面<small style="color:#999;font-size:9px">(${_dFront})</small></span>
                 <input type="number" class="form-input" id="sb-front-${planIdx}" value="${sbCard.front}" step="0.1" oninput="onCardSetbackChange(${planIdx})" onclick="event.stopPropagation()">
-                <span class="form-sub">m</span>
-                <span class="sb-dist-dir">背面<small style="color:#999;font-size:9px">(${_dRear})</small></span>
+                <span class="form-sub">m</span></span>
+                <span class="sb-dist-item"><span class="sb-dist-dir">背面<small style="color:#999;font-size:9px">(${_dRear})</small></span>
                 <input type="number" class="form-input" id="sb-rear-${planIdx}"  value="${sbCard.rear}"  step="0.1" oninput="onCardSetbackChange(${planIdx})" onclick="event.stopPropagation()">
-                <span class="form-sub">m</span>
-                <span class="sb-dist-dir">左<small style="color:#999;font-size:9px">(${_dLeft})</small></span>
+                <span class="form-sub">m</span></span>
+                <span class="sb-dist-item"><span class="sb-dist-dir">左<small style="color:#999;font-size:9px">(${_dLeft})</small></span>
                 <input type="number" class="form-input" id="sb-left-${planIdx}"  value="${sbCard.left}"  step="0.1" oninput="onCardSetbackChange(${planIdx})" onclick="event.stopPropagation()">
-                <span class="form-sub">m</span>
-                <span class="sb-dist-dir">右<small style="color:#999;font-size:9px">(${_dRight})</small></span>
+                <span class="form-sub">m</span></span>
+                <span class="sb-dist-item"><span class="sb-dist-dir">右<small style="color:#999;font-size:9px">(${_dRight})</small></span>
                 <input type="number" class="form-input" id="sb-right-${planIdx}" value="${sbCard.right}" step="0.1" oninput="onCardSetbackChange(${planIdx})" onclick="event.stopPropagation()">
-                <span class="form-sub">m</span>
+                <span class="form-sub">m</span></span>
               </span>`}
             </div>
             <div id="sb-dist-unavail-${planIdx}" class="sb-dist-unavail-msg" style="display:none">
