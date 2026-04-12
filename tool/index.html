@@ -3897,7 +3897,8 @@ function showUnitTypePicker(planIdx) {
   // 既存のピッカーを閉じる
   document.querySelectorAll('.unit-type-picker').forEach(el => el.remove());
 
-  const btn = document.querySelector(`#plan-card-${planIdx} .unit-plus-btn`);
+  const btns = document.querySelectorAll(`#plan-card-${planIdx} .unit-adj-btn`);
+  const btn = btns.length >= 2 ? btns[1] : btns[0];
   if (!btn) return;
 
   const picker = document.createElement('div');
