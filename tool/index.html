@@ -7510,7 +7510,17 @@ function onCardTsuboSlider(planIdx, val) {
 
     const card = document.getElementById(`plan-card-${planIdx}`);
     const plan = _lastPlans[planIdx];
-    const opts = { hasBasement: plan.hasBasement, shadowAvoidMode: plan.shadowAvoidMode, manualTsubo: numVal, commonAreaBase: plan.commonAreaBase || 0, manualBcrRatio: plan.manualBcrRatio || 0, manualExitCR: plan.manualExitCR || 0 };
+    const curSb = getCardSetbacks(planIdx);
+    const opts = {
+      hasBasement: plan.hasBasement, shadowAvoidMode: plan.shadowAvoidMode,
+      manualTsubo: numVal, commonAreaBase: plan.commonAreaBase || 0,
+      manualBcrRatio: plan.manualBcrRatio || 0, manualExitCR: plan.manualExitCR || 0,
+      floorComboOverride:      (_customPlanActive && !_customFloorGroupsActive) ? _customCombo : null,
+      floorComboAreasOverride: (_customPlanActive && !_customFloorGroupsActive) ? _customAreas : null,
+      perFloorGroupsOverride:  (_customPlanActive && _customFloorGroupsActive)  ? _customFloorGroupsActive : null,
+      floorCountOverride:      (_customPlanActive && _customFloorCount > 0) ? _customFloorCount : 0,
+      setbackMode: curSb.mode || 'bcr', setbacks: curSb,
+    };
     const newResult = findBestLayout(plan.structureKey, DEFAULT_RENTS, opts);
     _lastPlans[planIdx].result = newResult;
 
@@ -7540,7 +7550,17 @@ function onCardTsuboInput(planIdx, val) {
 
     const card = document.getElementById(`plan-card-${planIdx}`);
     const plan = _lastPlans[planIdx];
-    const opts = { hasBasement: plan.hasBasement, shadowAvoidMode: plan.shadowAvoidMode, manualTsubo: numVal, commonAreaBase: plan.commonAreaBase || 0, manualBcrRatio: plan.manualBcrRatio || 0, manualExitCR: plan.manualExitCR || 0 };
+    const curSb = getCardSetbacks(planIdx);
+    const opts = {
+      hasBasement: plan.hasBasement, shadowAvoidMode: plan.shadowAvoidMode,
+      manualTsubo: numVal, commonAreaBase: plan.commonAreaBase || 0,
+      manualBcrRatio: plan.manualBcrRatio || 0, manualExitCR: plan.manualExitCR || 0,
+      floorComboOverride:      (_customPlanActive && !_customFloorGroupsActive) ? _customCombo : null,
+      floorComboAreasOverride: (_customPlanActive && !_customFloorGroupsActive) ? _customAreas : null,
+      perFloorGroupsOverride:  (_customPlanActive && _customFloorGroupsActive)  ? _customFloorGroupsActive : null,
+      floorCountOverride:      (_customPlanActive && _customFloorCount > 0) ? _customFloorCount : 0,
+      setbackMode: curSb.mode || 'bcr', setbacks: curSb,
+    };
     const newResult = findBestLayout(plan.structureKey, DEFAULT_RENTS, opts);
     _lastPlans[planIdx].result = newResult;
 
