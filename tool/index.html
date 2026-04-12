@@ -4119,17 +4119,20 @@ function editUnitArea(planIdx, unitIdx, el) {
       return;
     }
 
-    // 変更対象の面積設定、タイプ再判定
+    // 変更対象の面積のみ設定（タイプはそのまま維持）
     areas[unitIdx] = newArea;
-    combo[unitIdx] = _autoType(newArea);
 
-    // 残りを他の部屋で均等配分→タイプ再判定
+    // 残りを他の部屋で比率按分（タイプは維持）
     if (otherCount > 0) {
-      const eachOther = Math.round(remainForOthers / otherCount * 10) / 10;
+      const oldOtherAreas = areas.filter((_, i) => i !== unitIdx);
+      const oldOtherTotal = oldOtherAreas.reduce((s, a) => s + a, 0);
+      let j = 0;
       for (let i = 0; i < combo.length; i++) {
         if (i !== unitIdx) {
-          areas[i] = eachOther;
-          combo[i] = _autoType(eachOther);
+          areas[i] = oldOtherTotal > 0
+            ? Math.round(remainForOthers * oldOtherAreas[j] / oldOtherTotal * 10) / 10
+            : Math.round(remainForOthers / otherCount * 10) / 10;
+          j++;
         }
       }
       // 端数調整
