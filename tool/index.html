@@ -7879,8 +7879,8 @@ document.addEventListener('DOMContentLoaded', () => {
   .form-row {
     flex-wrap: wrap !important;
     align-items: flex-start !important;
-    gap: 4px 6px !important;
-    margin-bottom: 6px !important;
+    gap: 2px 6px !important;
+    margin-bottom: 4px !important;
   }
   .form-label {
     min-width: unset !important;
@@ -7908,7 +7908,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* iOS zoom防止（16px以上） */
   .form-input, select.form-input, .form-select, input, select, textarea {
     font-size: 16px !important;
-    min-height: 34px !important;
+    min-height: 28px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
   }
   .form-sub { font-size: 11px !important; }
 
@@ -7936,7 +7938,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* landingモード内のフォーム入力もスマホ対応 */
   body.landing .form-input {
     font-size: 16px !important;
-    min-height: 34px !important;
+    min-height: 28px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
   }
   body.landing .form-input.wide { width: 100% !important; }
   body.landing .form-row { flex-wrap: wrap !important; gap: 6px !important; }
