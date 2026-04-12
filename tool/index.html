@@ -6900,7 +6900,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
         </div>
       </div>
       <span>m${roadAddLabel}） × ${hdRule.slope}</span>
-      <div style="width:100%;font-size:12px">＝ ${fmt(H, 1)}m → ${maxF}階${exactLabel}${absMaxLabel}${autoLabel}</div>
+      <div style="width:100%;font-size:12px;text-align:right">＝ ${fmt(H, 1)}m → ${maxF}階${exactLabel}${absMaxLabel}${autoLabel}</div>
     </div>`;
   })();
 
@@ -6936,7 +6936,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
         </div>
       </div>
       <span>m前退) × ${slopeStr}</span>
-      <div style="width:100%;font-size:12px">= ${fmt(allowedH, 1)}m → ${maxF_sky.toFixed(2)}階(天空率) ${status}</div>
+      <div style="width:100%;font-size:12px;text-align:right">= ${fmt(allowedH, 1)}m → ${maxF_sky.toFixed(2)}階(天空率) ${status}</div>
     </div>`;
   })();
 
