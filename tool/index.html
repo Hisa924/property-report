@@ -563,8 +563,8 @@
     /* 後退距離グリッド */
     .setback-grid {
       display: grid;
-      grid-template-columns: auto auto;
-      gap: 5px 40px;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px 20px;
       justify-content: center;
     }
     .setback-item {
@@ -576,11 +576,12 @@
     .setback-dir {
       font-size: 11px;
       color: var(--text-sub);
-      min-width: 30px;
+      width: 42px;
       flex-shrink: 0;
+      text-align: right;
     }
     .setback-item .form-input {
-      width: 66px;
+      width: 50px;
     }
     /* 建築面積モード切替（ラジオ式） */
     .sb-mode-row {
@@ -1876,7 +1877,7 @@
     }
     .breakdown-table tfoot td:nth-child(2) { text-align: left; }
     /* Unit chips inside floor breakdown */
-    .floor-units { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .floor-units { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
     .unit-chip {
       display: inline-flex;
       align-items: center;
@@ -1891,8 +1892,9 @@
     .unit-chip.type-1k  { background: var(--tag-1k);  color: var(--tag-1k-text); }
     .unit-chip.type-1dk { background: var(--tag-1k);  color: var(--tag-1k-text); }
     .unit-chip.type-ldk { background: var(--tag-ldk); color: var(--tag-ldk-text); }
+    .unit-chip-label { display:inline-block; min-width:90px; }
     .unit-chip-rent { font-weight: 600; }
-    .unit-plus { color: var(--text-sub); font-size: 13px; margin: 0 3px; }
+    .unit-plus { display: none; }
     /* Ward ordinance banner */
     .ward-ordinance-banner {
       background: var(--card-bg);
@@ -7145,7 +7147,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
               const ov = floorRentOverrides[fi0] && floorRentOverrides[fi0][i];
               const dispRent = (ov != null) ? ov : u.rent;
               return (i > 0 ? '<span class="unit-plus">＋</span>' : '') +
-                '<span class="unit-chip ' + cls + '">' + u.type + ' ' + fmt(u.area, 1) + '㎡ ' +
+                '<span class="unit-chip ' + cls + '"><span class="unit-chip-label">' + u.type + ' ' + fmt(u.area, 1) + '㎡</span> ' +
                 '<span class="rent-stepper">' +
                 '<input class="floor-rent-input" type="number" step="0.5" min="0"' +
                 ' data-plan-idx="' + planIdx + '"' +
