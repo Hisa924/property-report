@@ -6421,9 +6421,18 @@ function calculate() {
 
   const results = plans.map((p, planIdx) => {
     // 1st pass: 消化建ぺい率ベースで計算（半地下・日影回避も自動探索）
+    // 希望プランがアクティブなら反映
+    const customOpts = _customPlanActive ? {
+      hasBasement: _customHasBasement,
+      floorCountOverride: (_customFloorCount > 0) ? _customFloorCount : 0,
+      floorComboOverride: (!_customFloorGroupsActive && _customCombo) ? _customCombo : null,
+      floorComboAreasOverride: (!_customFloorGroupsActive && _customAreas) ? _customAreas : null,
+      perFloorGroupsOverride: _customFloorGroupsActive || null,
+    } : {};
     const firstResult = findBestLayout(p.structureKey, DEFAULT_RENTS, {
-      autoOptimize: true,
+      autoOptimize: !_customPlanActive,
       manualTsubo: p.manualTsubo, commonAreaBase: p.commonAreaBase,
+      ...customOpts,
     });
 
     // kodo auto-adjustが発動した場合：実効北側後退距離で_planSetbacksを更新し後退距離ベースに切り替え
