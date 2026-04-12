@@ -7339,7 +7339,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                 ' data-unit-idx="' + i + '"' +
                 ' data-type="' + u.type + '"' +
                 ' value="' + fmt(dispRent, 1) + '"' +
-                ' oninput="onFloorRentInput(this)">' +
+                ' onchange="onFloorRentInput(this)">' +
                 '<span class="rent-step-btns">' +
                 '<button class="rent-step-btn" tabindex="-1" onclick="onFloorRentStep(this,0.5);event.stopPropagation()">▲</button>' +
                 '<button class="rent-step-btn" tabindex="-1" onclick="onFloorRentStep(this,-0.5);event.stopPropagation()">▼</button>' +
