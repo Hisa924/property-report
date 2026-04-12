@@ -3941,31 +3941,23 @@ function addUnit(planIdx, type) {
 
   if (combo.length >= 4) { alert('1階あたり最大4戸です'); return; }
 
-  // 新タイプの最低面積
-  const minArea = _getEffectiveMinArea();
-  const typeMin = Math.max(UNIT_TYPES[type].minArea, minArea);
-
   // 新しい部屋を追加
   combo.push(type);
-  areas.push(typeMin);
 
-  // 合計がperFloorを超える場合は均等再配分
-  const totalNeeded = areas.reduce((s, a) => s + a, 0);
-  if (totalNeeded > perFloor) {
-    // 各タイプの最低面積を確保した上で、残りを均等配分
-    const minAreas = combo.map(t => Math.max(UNIT_TYPES[t].minArea, minArea));
-    const totalMin = minAreas.reduce((s, a) => s + a, 0);
-    if (totalMin > perFloor) {
-      alert(`面積不足で追加できません（必要: ${fmt(totalMin,1)}㎡ / 利用可能: ${fmt(perFloor,1)}㎡）`);
-      return;
-    }
-    const remainder = perFloor - totalMin;
-    for (let i = 0; i < areas.length; i++) {
-      areas[i] = Math.round((minAreas[i] + remainder / areas.length) * 10) / 10;
-    }
+  // 全部屋をminAreaベースで再配分（既存面積はリセット）
+  const minArea = _getEffectiveMinArea();
+  const minAreas = combo.map(t => Math.max(UNIT_TYPES[t].minArea, minArea));
+  const totalMin = minAreas.reduce((s, a) => s + a, 0);
+  if (totalMin > perFloor) {
+    alert(`面積不足で追加できません（必要: ${fmt(totalMin,1)}㎡ / 利用可能: ${fmt(perFloor,1)}㎡）`);
+    combo.pop();
+    return;
   }
+  // 残り面積を均等配分
+  const remainder = perFloor - totalMin;
+  const newAreas = minAreas.map(m => Math.round((m + remainder / combo.length) * 10) / 10);
 
-  _applyUnitChange(planIdx, combo, areas);
+  _applyUnitChange(planIdx, combo, newAreas);
 }
 
 /** 部屋削除 */
