@@ -2674,6 +2674,15 @@ const UNIT_TYPES = {
   '3LDK': { area: 55, label: '3LDK', minArea: 51 }, // 50㎡超で初めて選択候補
 };
 
+/** 面積からタイプを自動判定（面積に最も合ったタイプを返す） */
+function _autoType(area) {
+  if (area >= 51) return '3LDK';
+  if (area >= 38) return '2LDK';
+  if (area >= 24) return '1LDK';
+  if (area >= 20) return '1DK';
+  return '1K';
+}
+
 // 初回計算・未入力時に使うデフォルト賃料（万円/月）
 const DEFAULT_RENTS = {
   '1K': 9, '1DK': 10, '1LDK': 13, '2LDK': 18, '3LDK': 25,
@@ -3934,8 +3943,8 @@ function showUnitTypePicker(planIdx) {
   }, 10);
 }
 
-/** 部屋追加 */
-function addUnit(planIdx, type) {
+/** 部屋追加（均等割り→タイプ自動判定） */
+function addUnit(planIdx) {
   // ピッカーを閉じる
   document.querySelectorAll('.unit-type-picker').forEach(el => el.remove());
 
@@ -3943,38 +3952,33 @@ function addUnit(planIdx, type) {
   const r = _lastPlans[planIdx].result;
   if (!r || r.error) return;
 
-  // 現在のcombo/areasを取得
   const combo = [...(r.floorCombo || [])];
-  const areas = [...(r.floorComboAreas || [])];
   const perFloor = r.perFloorResidential || 0;
 
   if (combo.length >= 4) { alert('1階あたり最大4戸です'); return; }
 
-  // 新しい部屋を追加
-  combo.push(type);
+  const newCount = combo.length + 1;
+  const evenArea = Math.round(perFloor / newCount * 10) / 10;
 
-  // 新しい部屋のminAreaを確保し、残り面積を既存部屋で按分
-  const newTypeMin = UNIT_TYPES[type].minArea;
-  const remainForExisting = perFloor - newTypeMin;
-
-  if (remainForExisting < (combo.length - 1) * 13) {
-    alert(`面積不足で追加できません`);
-    combo.pop();
+  if (evenArea < 15) {
+    alert(`面積不足で追加できません（1戸あたり${fmt(evenArea,1)}㎡）`);
     return;
   }
 
-  // 既存部屋の現在面積の比率で残り面積を按分
-  const oldTotal = areas.reduce((s, a) => s + a, 0);
-  const newAreas = areas.map(a => Math.round(remainForExisting * a / oldTotal * 10) / 10);
-  newAreas.push(newTypeMin);
-
-  // 余り面積を新しい部屋に加算（端数調整）
+  // 均等割り → タイプ自動判定
+  const newAreas = [];
+  const newCombo = [];
+  for (let i = 0; i < newCount; i++) {
+    newAreas.push(evenArea);
+    newCombo.push(_autoType(evenArea));
+  }
+  // 端数調整（最後の部屋に）
   const used = newAreas.reduce((s, a) => s + a, 0);
-  if (perFloor - used > 0.1) {
+  if (Math.abs(perFloor - used) > 0.05) {
     newAreas[newAreas.length - 1] = Math.round((newAreas[newAreas.length - 1] + perFloor - used) * 10) / 10;
   }
 
-  _applyUnitChange(planIdx, combo, newAreas);
+  _applyUnitChange(planIdx, newCombo, newAreas);
 }
 
 /** 部屋削除 */
@@ -3999,6 +4003,74 @@ function removeUnit(planIdx) {
     const extra = (perFloor - totalUsed) / areas.length;
     for (let i = 0; i < areas.length; i++) {
       areas[i] = Math.round((areas[i] + extra) * 10) / 10;
+    }
+  }
+
+  _applyUnitChange(planIdx, combo, areas);
+}
+
+/** タイプ変更ピッカーを表示 */
+function showTypeChanger(planIdx, unitIdx, el) {
+  document.querySelectorAll('.unit-type-picker').forEach(p => p.remove());
+  const picker = document.createElement('div');
+  picker.className = 'unit-type-picker';
+  picker.innerHTML = ['1K','1DK','1LDK','2LDK','3LDK'].map(t =>
+    `<button onclick="changeUnitType(${planIdx},${unitIdx},'${t}')">${t}</button>`
+  ).join('');
+  document.body.appendChild(picker);
+  const rect = el.getBoundingClientRect();
+  let top = rect.bottom + 4;
+  let left = rect.left;
+  if (left + picker.offsetWidth > window.innerWidth - 8) left = window.innerWidth - picker.offsetWidth - 8;
+  if (left < 8) left = 8;
+  if (top + picker.offsetHeight > window.innerHeight - 8) top = rect.top - picker.offsetHeight - 4;
+  picker.style.top = top + 'px';
+  picker.style.left = left + 'px';
+  setTimeout(() => {
+    document.addEventListener('click', function _close(e) {
+      if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', _close); }
+    });
+  }, 10);
+}
+
+/** タイプ変更：選択タイプのminAreaを確保→残りを他の部屋で再配分→タイプ再判定 */
+function changeUnitType(planIdx, unitIdx, newType) {
+  document.querySelectorAll('.unit-type-picker').forEach(p => p.remove());
+  if (!_lastPlans || !_lastPlans[planIdx]) return;
+  const r = _lastPlans[planIdx].result;
+  if (!r || r.error) return;
+
+  const combo = [...(r.floorCombo || [])];
+  const areas = [...(r.floorComboAreas || [])];
+  const perFloor = r.perFloorResidential || 0;
+
+  const newMin = UNIT_TYPES[newType].minArea;
+  const remainForOthers = perFloor - newMin;
+  const otherCount = combo.length - 1;
+
+  if (otherCount > 0 && remainForOthers / otherCount < 15) {
+    alert(`${newType}(${newMin}㎡)にすると他の部屋が狭すぎます`);
+    return;
+  }
+
+  // 変更対象のタイプと面積を設定
+  combo[unitIdx] = newType;
+  areas[unitIdx] = newMin;
+
+  // 残りを他の部屋で均等配分→タイプ再判定
+  if (otherCount > 0) {
+    const eachOther = Math.round(remainForOthers / otherCount * 10) / 10;
+    for (let i = 0; i < combo.length; i++) {
+      if (i !== unitIdx) {
+        areas[i] = eachOther;
+        combo[i] = _autoType(eachOther);
+      }
+    }
+    // 端数調整
+    const used = areas.reduce((s, a) => s + a, 0);
+    if (Math.abs(perFloor - used) > 0.05) {
+      const lastOther = combo.findIndex((_, i) => i !== unitIdx);
+      if (lastOther >= 0) areas[lastOther] = Math.round((areas[lastOther] + perFloor - used) * 10) / 10;
     }
   }
 
@@ -6867,7 +6939,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           <div class="card-plan-name">${plan.name}</div>
           <div class="card-header-plan-detail">${(() => {
             const b = r.hasBasement ? '+B1' : '';
-            const unitBtns = `<span class="unit-adjust-inline"><button class="unit-adj-btn" onclick="event.stopPropagation();removeUnit(${planIdx})" title="1戸減らす">−</button> ${r.unitsPerFloor}戸 <button class="unit-adj-btn" onclick="event.stopPropagation();showUnitTypePicker(${planIdx})" title="1戸追加">＋</button></span>`;
+            const unitBtns = `<span class="unit-adjust-inline"><button class="unit-adj-btn" onclick="event.stopPropagation();removeUnit(${planIdx})" title="1戸減らす">−</button> ${r.unitsPerFloor}戸 <button class="unit-adj-btn" onclick="event.stopPropagation();addUnit(${planIdx})" title="1戸追加">＋</button></span>`;
             if (_customPlanActive && _customFloorGroupsActive && _customFloorGroupsActive.length > 0) {
               const groups = _customFloorGroupsActive;
               return groups.map((g, i) => {
@@ -7158,7 +7230,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
               const ov = floorRentOverrides[fi0] && floorRentOverrides[fi0][i];
               const dispRent = (ov != null) ? ov : u.rent;
               return (i > 0 ? '<span class="unit-plus">＋</span>' : '') +
-                '<span class="unit-chip ' + cls + '"><span class="unit-chip-label">' + u.type + ' ' + fmt(u.area, 1) + '㎡</span> ' +
+                '<span class="unit-chip ' + cls + '"><span class="unit-chip-label"><span class="unit-type-tap" onclick="event.stopPropagation();showTypeChanger(' + planIdx + ',' + i + ',this)" style="cursor:pointer;text-decoration:underline dotted">' + u.type + '</span> ' + fmt(u.area, 1) + '㎡</span> ' +
                 '<span class="rent-stepper">' +
                 '<input class="floor-rent-input" type="number" step="0.5" min="0"' +
                 ' data-plan-idx="' + planIdx + '"' +
