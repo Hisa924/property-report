@@ -7133,7 +7133,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                      value="${fmt(consumedBCR, 1)}" min="${bcrMin}" max="${maxBCRCap}" step="0.5"
                      oninput="onCardBcrRatioChange(${planIdx}, this.value)"
                      onclick="event.stopPropagation()"
-                     title="消化建ぺい率を手動調整（自動値: 最大建ぺい率×0.75）">
+                     title="消化建ぺい率を手動調整">
               <span class="ab-ratio-pct">%</span>
               <span style="margin-left:auto;display:flex;align-items:center;gap:2px">
                 <input type="number" class="ab-ratio-input" id="card-bcr-area-${planIdx}"
@@ -7145,6 +7145,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
                 <span class="ab-ratio-pct">㎡</span>
               </span>
             </div>
+            ${!isBcr ? `<div style="font-size:10px;color:#888;margin:2px 0 0 22px">実消化建ぺい率: ${fmt(consumedBCR, 1)}% （建築面積 ${fmt(r.buildingArea1F, 1)}㎡）</div>` : ''}
             <!-- 後退距離ベース -->
             <div class="sb-mode-row ${!isBcr ? 'active' : 'inactive'} ${fi <= 0 || di <= 0 ? 'sb-mode-disabled' : ''}" onclick="trySetDistMode(${planIdx})">
               <div class="sb-radio-dot"></div>
