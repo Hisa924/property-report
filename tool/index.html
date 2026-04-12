@@ -7064,7 +7064,7 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           const evTag     = r.hasEV ? '<span class="ab-ev-tag">＋EV 6㎡</span>' : '';
           // カード個別セットバック設定（auto-setback含む）
           const sbCard  = getCardSetbacks(planIdx);
-          const isBcr   = r.effectiveMode !== 'dist';
+          const isBcr   = (r.effectiveMode || 'bcr') !== 'dist';
           // 形状入力から建築面積を計算（参考値）: カードのsetback値を使用
           const fi  = parseFloat(document.getElementById('frontage')?.value) || 0;
           const di  = parseFloat(document.getElementById('depth')?.value) || 0;
