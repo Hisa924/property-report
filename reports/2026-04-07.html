@@ -443,7 +443,7 @@ initSwipes();
   // まず件数なしで即時描画
   buildChips(null);
   // history.json から件数を非同期取得して更新
-  fetch('history.json')
+  fetch('history.json?v='+Date.now())
     .then(function(r){{ return r.json(); }})
     .then(function(hist){{ buildChips(hist); }})
     .catch(function(){{}});

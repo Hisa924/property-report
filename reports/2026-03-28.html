@@ -398,7 +398,7 @@ initSwipes();
     }
   }
   buildChips(null);
-  fetch('history.json').then(function(r){ return r.json(); }).then(function(hist){ buildChips(hist); }).catch(function(){});
+  fetch('history.json?v='+Date.now()).then(function(r){ return r.json(); }).then(function(hist){ buildChips(hist); }).catch(function(){});
 })();
 </script>
 </body>
