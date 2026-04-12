@@ -6899,8 +6899,8 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           <button class="kodo-ns-spin" onclick="event.stopPropagation();onKodoNsChange(${planIdx},-0.1,null)" tabindex="-1">▼</button>
         </div>
       </div>
-      <span>m${roadAddLabel}）</span>
-      <div style="width:100%;font-size:12px">× ${hdRule.slope} ＝ ${fmt(H, 1)}m → ${maxF}階${exactLabel}${absMaxLabel}${autoLabel}</div>
+      <span>m${roadAddLabel}） × ${hdRule.slope}</span>
+      <div style="width:100%;font-size:12px">＝ ${fmt(H, 1)}m → ${maxF}階${exactLabel}${absMaxLabel}${autoLabel}</div>
     </div>`;
   })();
 
@@ -6935,8 +6935,8 @@ function renderCard(plan, isBest, planIdx = 0, currentRents = {}, floorRentOverr
           <button class="kodo-ns-spin" onclick="event.stopPropagation();onRoadSlopeFrontChange(${planIdx},-0.1,null)" tabindex="-1">▼</button>
         </div>
       </div>
-      <span>m前退)</span>
-      <div style="width:100%;font-size:12px">× ${slopeStr} = ${fmt(allowedH, 1)}m → ${maxF_sky.toFixed(2)}階(天空率) ${status}</div>
+      <span>m前退) × ${slopeStr}</span>
+      <div style="width:100%;font-size:12px">= ${fmt(allowedH, 1)}m → ${maxF_sky.toFixed(2)}階(天空率) ${status}</div>
     </div>`;
   })();
 
