@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>収益物件レポート - 2026-04-15</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',sans-serif;background:#f0f2f5;color:#1a1a2e}
+.floating-date{position:fixed;top:0;left:0;right:0;z-index:8000;background:rgba(26,26,46,.92);backdrop-filter:blur(8px);color:white;text-align:center;padding:6px 0;font-size:13px;font-weight:700;letter-spacing:.05em;transform:translateY(-100%);transition:transform .25s ease;pointer-events:none}
+.floating-date.show{transform:translateY(0)}
+.header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:white;padding:24px 32px}
+.header-title{font-size:20px;font-weight:700;letter-spacing:.05em}
+.header-date{font-size:16px;font-weight:600;color:#4fc3f7;margin-top:4px;display:flex;align-items:center;gap:8px}
+.date-nav{background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.7);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s}
+.date-nav:hover{background:rgba(255,255,255,.25);color:white}
+.date-nav.disabled{opacity:.2;pointer-events:none;cursor:default}
+.header-stats{display:flex;gap:24px;margin-top:16px}
+.stat{text-align:center}
+.stat-num{font-size:28px;font-weight:700;color:#4fc3f7}
+.stat-label{font-size:11px;opacity:.6;margin-top:2px}
+.rank-summary{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.rank-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.rank-badge.rank-Aplus{background:#ff6b35;color:white}
+.rank-badge.rank-A{background:#f7c59f;color:#7a3b00}
+.rank-badge.rank-Bplus{background:#4a90d9;color:white}
+.rank-badge.rank-B{background:#7eb8e8;color:white}
+.rank-badge.rank-NG{background:#555;color:#aaa}
+.history-nav{margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
+.history-label{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:8px}
+.history-days{display:flex;gap:8px;flex-wrap:wrap}
+.day-chip{padding:6px 0;width:72px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;text-decoration:none;text-align:center}
+.day-chip:hover{background:rgba(255,255,255,.18)}
+.day-chip.active{background:#4fc3f7;border-color:#4fc3f7}
+.day-chip-date{font-size:11px;color:rgba(255,255,255,.7)}
+.day-chip.active .day-chip-date{color:#1a1a2e}
+.day-chip-count{font-size:13px;font-weight:700;color:white;margin-top:1px}
+.day-chip.active .day-chip-count{color:#1a1a2e}
+.day-chip-count.zero{color:rgba(255,255,255,.3);font-weight:400;font-size:11px}
+.past-btn{padding:6px 0;width:72px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;text-align:center}
+.past-btn:hover{background:rgba(255,255,255,.18)}
+.cal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center}.cal-overlay.open{display:flex}
+.cal-box{background:#1e1e34;border-radius:14px;padding:20px;min-width:300px;max-width:340px;color:white;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cal-header button{background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:4px 10px;border-radius:6px}.cal-header button:hover{background:rgba(255,255,255,.15)}
+.cal-title{font-size:15px;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-dow{font-size:10px;color:rgba(255,255,255,.4);padding:4px 0}
+.cal-day{font-size:13px;padding:6px 2px;border-radius:6px;cursor:default;color:rgba(255,255,255,.25)}
+.cal-day.has-data{cursor:pointer;color:white;background:rgba(255,255,255,.08)}.cal-day.has-data:hover{background:#4fc3f7;color:#1a1a2e}
+.cal-day.today{border:1px solid #4fc3f7}
+.cal-day .cal-count{font-size:9px;color:rgba(255,255,255,.4);display:block;margin-top:1px}.cal-day.has-data .cal-count{color:rgba(255,255,255,.6)}
+.filter-bar{background:white;padding:12px 32px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #e0e0e0;flex-wrap:wrap}
+.filter-label{font-size:12px;color:#888;font-weight:600}
+.filter-btn{padding:6px 14px;border:1px solid #ddd;border-radius:20px;background:white;font-size:12px;cursor:pointer;transition:all .2s}
+.filter-btn:hover,.filter-btn.active{background:#1a1a2e;color:white;border-color:#1a1a2e}
+.sort-select{margin-left:auto;padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer}
+.count-label{font-size:12px;color:#888;margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:24px 32px}
+.card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.card-img{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background:#111}
+.card-img img{width:100%;height:100%;object-fit:contain;display:block;cursor:zoom-in;transition:transform .25s}
+.card-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:40px}
+.img-slider{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background:#111}
+.img-slides{display:flex;width:100%;height:100%;transition:transform .3s ease}
+.img-slides img{min-width:100%;width:100%;height:100%;object-fit:contain;flex-shrink:0;cursor:zoom-in;transition:transform .25s}
+.img-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.4);color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:10;line-height:1}
+.img-btn.prev{left:6px}
+.img-btn.next{right:6px}
+.img-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
+.img-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer}
+.img-dot.active{background:white}
+@media(hover:hover){.img-slides img:hover,.card-img img:hover{transform:scale(1.06)}}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;flex-direction:column;align-items:center;justify-content:center}.lightbox.open{display:flex}
+.lb-img{max-width:95vw;max-height:82vh;object-fit:contain;border-radius:6px;user-select:none;-webkit-user-drag:none}
+.lb-close{position:fixed;top:14px;right:18px;color:white;font-size:34px;cursor:pointer;line-height:1;z-index:10001;padding:4px 10px}
+.lb-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.18);color:white;border:none;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;z-index:10001}
+.lb-nav.prev{left:10px}.lb-nav.next{right:10px}
+.lb-counter{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.65);font-size:13px;z-index:10001}
+.rank-tag{position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:800}
+.rank-tag.Aplus{background:#ff6b35;color:white}
+.rank-tag.A{background:#f7c59f;color:#7a3b00}
+.rank-tag.Bplus{background:#4a90d9;color:white}
+.rank-tag.B{background:#7eb8e8;color:white}
+.rank-tag.NG{background:rgba(0,0,0,.6);color:#ccc}
+.basement-tag{position:absolute;top:12px;right:12px;background:rgba(80,160,80,.9);color:white;font-size:10px;padding:3px 7px;border-radius:4px;font-weight:600}
+.new-tag{position:absolute;top:12px;right:12px;background:#e74c3c;color:white;font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em;z-index:5}
+.hatazao-tag{position:absolute;bottom:10px;left:12px;background:rgba(255,152,0,.9);color:white;font-size:10px;padding:3px 7px;border-radius:4px;font-weight:600;z-index:5}
+.basement-tag+.new-tag,.new-tag+.basement-tag{right:12px}
+.card[data-basement="true"] .new-tag{top:36px}
+.card-body{padding:14px 16px}
+.card-address{font-size:11px;color:#888;margin-bottom:2px}
+.card-location{font-size:16px;font-weight:700;color:#1a1a2e}
+.card-price{font-size:22px;font-weight:800;color:#1a1a2e;margin-top:6px}
+.card-price-sub{font-size:11px;color:#888;font-weight:400}
+.card-info{display:flex;gap:16px;margin-top:8px}
+.card-info-item{font-size:12px;color:#555}
+.card-info-item span{display:block;font-size:10px;color:#aaa;margin-bottom:1px}
+.divider{height:1px;background:#f0f0f0;margin:10px 0}
+.land-detail{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#f8f9fa;border-radius:8px;padding:10px;margin-top:8px}
+.land-detail-item .lbl{font-size:10px;color:#aaa}
+.land-detail-item .val{font-size:12px;font-weight:600;color:#1a1a2e}
+.land-detail-item .val.missing{color:#ccc;font-weight:400;font-style:italic}
+.land-detail-item .val.estimated{color:#E67E22}
+.plan-title{font-size:10px;font-weight:700;color:#888;letter-spacing:.08em;margin-bottom:8px}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.plan-item .lbl{font-size:10px;color:#aaa}
+.plan-item .val{font-size:13px;font-weight:600;color:#1a1a2e}
+.plan-item .val.yield{color:#e74c3c;font-size:16px;font-weight:800}
+.plan-item .val.good{color:#27ae60}
+.far-bar{margin-top:8px}
+.far-bar-label{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-bottom:3px}
+.far-bar-track{height:5px;background:#f0f0f0;border-radius:3px}
+.far-bar-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,#4fc3f7,#1976d2)}
+.card-footer{padding:10px 16px;background:#fafafa;border-top:1px solid #f0f0f0;display:flex;gap:8px}
+.btn{flex:1;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;border:none;transition:background .2s}
+.btn-primary{background:#1a1a2e;color:white}
+.btn-primary:hover{background:#2d2d4e}
+.btn-secondary{background:white;color:#1a1a2e;border:1px solid #ddd}
+.btn-secondary:hover{background:#f5f5f5}
+.ng-reason{font-size:11px;color:#999;background:#f5f5f5;padding:3px 8px;border-radius:4px;margin-top:6px;display:inline-block}
+@media(max-width:600px){
+  .header{padding:16px}
+  .grid{padding:16px;grid-template-columns:1fr}
+  .filter-bar{padding:10px 16px}
+}
+</style>
+<script>const DATA=[{"rank": "D+", "site": "住友不動産販売", "ward": "足立区", "address": "足立区入谷５丁目", "price_man": 5580.0, "area_sqm": 165.0, "tsubo": 49.9, "tsubo_unit": 112, "stations": [{"name": "舎人駅", "walk": "10"}, {"name": "舎人公園駅", "walk": "14"}], "url": "https://www.stepon.co.jp/tochi/detail_16571003/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1OGRiM1x1N2FjYlx1NTMzYVx1NTE2NVx1OGMzN1x1ZmYxNVx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAxNjUuMCwgImxhbmRfcHJpY2UiOiA1NTgwLjAsICJyb2FkX3dpZHRoIjogNi4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1NmU5Nlx1NWRlNVx1Njk2ZFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZTA5XHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzMTciLCAiaXNfZmlyZV96b25lIjogZmFsc2UsICJpc19jb3JuZXJfbG90IjogZmFsc2UsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU4MjBlXHU0ZWJhXHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTAifSwgeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1ODIwZVx1NGViYVx1NTE2Y1x1NTcxMlx1OTljNSIsICJtaW51dGVzIjogIjE0In1dfQ==", "imgs": ["../imgs/p70f4342180d1.jpg", "../imgs/p51183f925e22.gif", "../imgs/p2bf5b55bafc3.jpg", "../imgs/pcfc07b22ff69.jpg", "../imgs/p72e4dbcd445c.jpg"], "use_zone": "準工業地域", "front_direction": "一方道路・北11m(公道)接面6.2m", "road_width": 6.0, "height_district": "第三種高度地区", "height_district_estimated": false, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 9.09, "floors_str": "地上3F＋半地下 / 16戸", "has_basement": true, "construction_cost": 19765, "total_cost": 25345, "annual_rent": 2304, "far_used": 160.6, "effective_far": 200, "consumed_bcr": 60, "max_bcr": 60, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "D+", "site": "住友不動産販売", "ward": "足立区", "address": "足立区新田３丁目", "price_man": 8980.0, "area_sqm": 128.25, "tsubo": 38.8, "tsubo_unit": 231, "stations": [{"name": "王子神谷駅", "walk": "14"}], "url": "https://www.stepon.co.jp/tochi/detail_160D1004/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1OGRiM1x1N2FjYlx1NTMzYVx1NjViMFx1NzUzMFx1ZmYxM1x1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAxMjguMjUsICJsYW5kX3ByaWNlIjogODk4MC4wLCAicm9hZF93aWR0aCI6IDYuMCwgImJjciI6IDkwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogMzAwLjAsICJ1c2Vfem9uZSI6ICJcdThmZDFcdTk2YTNcdTU1NDZcdTY5NmRcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1N2IyY1x1NGUwOVx1N2EyZVx1OWFkOFx1NWVhNlx1NTczMFx1NTMzYSIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICI1aC0zaCIsICJmcm9udF9kaXJlY3Rpb24iOiAiXHU1MzU3IiwgImlzX2ZpcmVfem9uZSI6IGZhbHNlLCAiaXNfY29ybmVyX2xvdCI6IHRydWUsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU3MzhiXHU1YjUwXHU3OTVlXHU4YzM3XHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTQifV19", "imgs": ["../imgs/pf2f48aba7cc8.jpg", "../imgs/p231a932124b8.jpg", "../imgs/p52dcfb68df05.jpg", "../imgs/p90c04546f3ac.jpg", "../imgs/p573117290621.jpg"], "use_zone": "近隣商業地域", "front_direction": "角地・南8m(公道)接面13.5m/西11m(公道)接面7.1m", "road_width": 6.0, "height_district": "第三種高度地区", "height_district_estimated": false, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 8.38, "floors_str": "地上4F / 16戸", "has_basement": false, "construction_cost": 20791, "total_cost": 29771, "annual_rent": 2496, "far_used": 299.8, "effective_far": 300, "consumed_bcr": 81.2, "max_bcr": 100, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "C+", "site": "住友不動産販売", "ward": "練馬区", "address": "練馬区石神井台２丁目", "price_man": 9880.0, "area_sqm": 183.53, "tsubo": 55.5, "tsubo_unit": 178, "stations": [{"name": "上石神井駅", "walk": "12"}], "url": "https://www.stepon.co.jp/tochi/detail_15481037/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1N2RmNFx1OTlhY1x1NTMzYVx1NzdmM1x1Nzk1ZVx1NGU5NVx1NTNmMFx1ZmYxMlx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAxODMuNTMsICJsYW5kX3ByaWNlIjogOTg4MC4wLCAicm9hZF93aWR0aCI6IDYuMCwgImJjciI6IDYwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogMjAwLjAsICJ1c2Vfem9uZSI6ICJcdTdiMmNcdTRlMDBcdTdhMmVcdTRmNGZcdTVjNDVcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1N2IyY1x1NGU4Y1x1N2EyZVx1OWFkOFx1NWVhNlx1NTczMFx1NTMzYSIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICI1aC0zaCIsICJmcm9udF9kaXJlY3Rpb24iOiAiXHU1MzU3XHU2NzcxIiwgImlzX2ZpcmVfem9uZSI6IGZhbHNlLCAiaXNfY29ybmVyX2xvdCI6IHRydWUsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU0ZTBhXHU3N2YzXHU3OTVlXHU0ZTk1XHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTIifV19", "imgs": ["../imgs/pcc03a0c12abd.jpg", "../imgs/p3f0437c1253a.jpg", "../imgs/p8064c613d509.jpg", "../imgs/p1d6b76bc165e.jpg", "../imgs/pb3099b4aafbe.jpg"], "use_zone": "第一種住居地域", "front_direction": "角地・南東6.1m(公道)接面12.8m/南西3.8m(公道)接面12.8m", "road_width": 6.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 8.11, "floors_str": "地上3F＋半地下 / 16戸", "has_basement": true, "construction_cost": 25613, "total_cost": 35493, "annual_rent": 2880, "far_used": 192.3, "effective_far": 200, "consumed_bcr": 69.9, "max_bcr": 70, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "D+", "site": "三井のリハウス", "ward": "葛飾区", "address": "葛飾区鎌倉3丁目", "price_man": 5980.0, "area_sqm": 112.27, "tsubo": 34.0, "tsubo_unit": 176, "stations": [{"name": "新柴又駅", "walk": "6"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FQ8BDA0A/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1ODQ1Ylx1OThmZVx1NTMzYVx1OTM4Y1x1NTAwOTNcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTEyLjI3LCAibGFuZF9wcmljZSI6IDU5ODAuMCwgInJvYWRfd2lkdGgiOiA0LjAsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDIwMC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU0ZjRlXHU1YzY0XHU0ZjRmXHU1YzQ1XHU1YzAyXHU3NTI4XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1ODk3ZiIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NjViMFx1NjdmNFx1NTNjOFx1OTljNSIsICJtaW51dGVzIjogIjYifV19", "imgs": ["../imgs/p355abc15c6e3.jpg", "../imgs/p5a1425271ecb.jpg", "../imgs/p442fa94c95a5.jpg"], "use_zone": "第二種低層住居専用地域", "front_direction": "西", "road_width": 4.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 7.62, "floors_str": "地上3F＋半地下 / 12戸", "has_basement": true, "construction_cost": 13556, "total_cost": 19536, "annual_rent": 1488, "far_used": 147.6, "effective_far": 160, "consumed_bcr": 58.7, "max_bcr": 70, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "D+", "site": "三井のリハウス", "ward": "葛飾区", "address": "葛飾区堀切1丁目", "price_man": 4980.0, "area_sqm": 79.23, "tsubo": 24.0, "tsubo_unit": 208, "stations": [{"name": "堀切菖蒲園駅", "walk": "12"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FKDBDA01/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1ODQ1Ylx1OThmZVx1NTMzYVx1NTgwMFx1NTIwNzFcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogNzkuMjMsICJsYW5kX3ByaWNlIjogNDk4MC4wLCAicm9hZF93aWR0aCI6IDQuMCwgImJjciI6IDYwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogMjAwLjAsICJ1c2Vfem9uZSI6ICJcdTZlOTZcdTVkZTVcdTY5NmRcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1N2IyY1x1NGUwOVx1N2EyZVx1OWFkOFx1NWVhNlx1NTczMFx1NTMzYSIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICI1aC0zaCIsICJmcm9udF9kaXJlY3Rpb24iOiAiXHU1MzU3IiwgImlzX2ZpcmVfem9uZSI6IHRydWUsICJpc19jb3JuZXJfbG90IjogZmFsc2UsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU1ODAwXHU1MjA3XHU4M2Q2XHU4NGIyXHU1NzEyXHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTIifV19", "imgs": ["../imgs/pe969f4f2f117.jpg", "../imgs/p4aac5a24be69.jpg", "../imgs/p555a9f306bca.jpg"], "use_zone": "準工業地域", "front_direction": "南", "road_width": 4.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 7.47, "floors_str": "地上3F / 6戸", "has_basement": false, "construction_cost": 7550, "total_cost": 12530, "annual_rent": 936, "far_used": 187.3, "effective_far": 200, "consumed_bcr": 70, "max_bcr": 70, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B+", "site": "三井のリハウス", "ward": "杉並区", "address": "杉並区方南2丁目", "price_man": 10480.0, "area_sqm": 115.6, "tsubo": 35.0, "tsubo_unit": 300, "stations": [{"name": "方南町駅", "walk": "4"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/F34BDA05/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1Njc0OVx1NGUyNlx1NTMzYVx1NjViOVx1NTM1NzJcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTE1LjYsICJsYW5kX3ByaWNlIjogMTA0ODAuMCwgInJvYWRfd2lkdGgiOiAyLjYsICJiY3IiOiA4MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDQwMC4wLCAidXNlX3pvbmUiOiAiXHU4ZmQxXHU5NmEzXHU1NTQ2XHU2OTZkXHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlMDlcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1Njc3MSIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NjViOVx1NTM1N1x1NzUzYVx1OTljNSIsICJtaW51dGVzIjogIjQifV19", "imgs": ["../imgs/p6da0aa490515.jpg", "../imgs/p8881f9196768.jpg", "../imgs/p51605c86b8b2.jpg"], "use_zone": "近隣商業地域", "front_direction": "東", "road_width": 2.6, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 7.23, "floors_str": "地上3F / 12戸", "has_basement": false, "construction_cost": 13407, "total_cost": 23887, "annual_rent": 1728, "far_used": 234.8, "effective_far": 240, "consumed_bcr": 85.2, "max_bcr": 90, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B+", "site": "住友不動産販売", "ward": "大田区", "address": "大田区東蒲田２丁目", "price_man": 14000.0, "area_sqm": 161.17, "tsubo": 48.8, "tsubo_unit": 287, "stations": [{"name": "京急蒲田駅", "walk": "7"}, {"name": "梅屋敷駅", "walk": "10"}], "url": "https://www.stepon.co.jp/tochi/detail_16461002/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTkyN1x1NzUzMFx1NTMzYVx1Njc3MVx1ODRiMlx1NzUzMFx1ZmYxMlx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAxNjEuMTcsICJsYW5kX3ByaWNlIjogMTQwMDAuMCwgInJvYWRfd2lkdGgiOiA0LjAsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDIwMC4wLCAidXNlX3pvbmUiOiAiXHU2ZTk2XHU1ZGU1XHU2OTZkXHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlMDlcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTMxNyIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IHRydWUsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU0ZWFjXHU2MDI1XHU4NGIyXHU3NTMwXHU5OWM1IiwgIm1pbnV0ZXMiOiAiNyJ9LCB7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU2ODg1XHU1YzRiXHU2NTc3XHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTAifV19", "imgs": ["../imgs/p50176d0f313f.jpg", "../imgs/p2235e88f26d0.jpg", "../imgs/p8f41d25069de.jpg", "../imgs/pe1870ba04c9e.jpg", "../imgs/pcd3f5dae2981.jpg"], "use_zone": "準工業地域", "front_direction": "角地・北4.8m(公道)接面2.6m/西2.2m(私道)接面17.7m", "road_width": 4.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 6.97, "floors_str": "地上3F / 12戸", "has_basement": false, "construction_cost": 14930, "total_cost": 28930, "annual_rent": 2016, "far_used": 196.3, "effective_far": 200, "consumed_bcr": 70.4, "max_bcr": 80, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "住友不動産販売", "ward": "練馬区", "address": "練馬区豊玉南３丁目", "price_man": 4980.0, "area_sqm": 61.11, "tsubo": 18.5, "tsubo_unit": 269, "stations": [{"name": "野方駅", "walk": "11"}], "url": "https://www.stepon.co.jp/tochi/detail_16061003/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1N2RmNFx1OTlhY1x1NTMzYVx1OGM0YVx1NzM4OVx1NTM1N1x1ZmYxM1x1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiA2MS4xMSwgImxhbmRfcHJpY2UiOiA0OTgwLjAsICJyb2FkX3dpZHRoIjogNC4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1NmU5Nlx1NWRlNVx1Njk2ZFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZTA5XHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTg5N2YiLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTkxY2VcdTY1YjlcdTk5YzUiLCAibWludXRlcyI6ICIxMSJ9XX0=", "imgs": ["../imgs/p9bd897e3b4c0.jpg", "../imgs/p7fad7b8e545a.jpg", "../imgs/p67b653d9e538.jpg", "../imgs/p992b9eb3a587.jpg", "../imgs/pbcb6f909d4c4.jpg"], "use_zone": "準工業地域", "front_direction": "一方道路・西4.5m(私道)接面9.5m", "road_width": 4.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 6.92, "floors_str": "地上4F / 8戸", "has_basement": false, "construction_cost": 7508, "total_cost": 12488, "annual_rent": 864, "far_used": 199.6, "effective_far": 200, "consumed_bcr": 70, "max_bcr": 70, "disqualified": true, "disqualify_reason": "全戸1Kのため利回り信頼性低", "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B+", "site": "三井のリハウス", "ward": "大田区", "address": "大田区大森東3丁目", "price_man": 10800.0, "area_sqm": 137.05, "tsubo": 41.5, "tsubo_unit": 261, "stations": [{"name": "大森町駅", "walk": "8"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FS4BDA08/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTkyN1x1NzUzMFx1NTMzYVx1NTkyN1x1NjhlZVx1Njc3MTNcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTM3LjA1LCAibGFuZF9wcmljZSI6IDEwODAwLjAsICJyb2FkX3dpZHRoIjogNi4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1NmU5Nlx1NWRlNVx1Njk2ZFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZTA5XHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzMTdcdTg5N2YiLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTU5MjdcdTY4ZWVcdTc1M2FcdTk5YzUiLCAibWludXRlcyI6ICI4In1dfQ==", "imgs": ["../imgs/p75198fed0b98.jpg", "../imgs/p87ce5cefda27.jpg", "../imgs/p12a7cb7cb949.jpg"], "use_zone": "準工業地域", "front_direction": "北西", "road_width": 6.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 6.9, "floors_str": "地上4F / 12戸", "has_basement": false, "construction_cost": 13532, "total_cost": 24332, "annual_rent": 1680, "far_used": 194.3, "effective_far": 200, "consumed_bcr": 54.4, "max_bcr": 70, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "D", "site": "住友不動産販売", "ward": "江戸川区", "address": "江戸川区中葛西５丁目", "price_man": 5980.0, "area_sqm": 76.0, "tsubo": 23.0, "tsubo_unit": 260, "stations": [{"name": "西葛西駅", "walk": "9"}, {"name": "葛西駅", "walk": "10"}], "url": "https://www.stepon.co.jp/tochi/detail_16161002/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NmM1Zlx1NjIzOFx1NWRkZFx1NTMzYVx1NGUyZFx1ODQ1Ylx1ODk3Zlx1ZmYxNVx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiA3Ni4wLCAibGFuZF9wcmljZSI6IDU5ODAuMCwgInJvYWRfd2lkdGgiOiA0LjAsICJiY3IiOiA3MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDIzNi4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZjRmXHU1YzQ1XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTMxN1x1Njc3MSIsICJpc19maXJlX3pvbmUiOiBmYWxzZSwgImlzX2Nvcm5lcl9sb3QiOiB0cnVlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1ODk3Zlx1ODQ1Ylx1ODk3Zlx1OTljNSIsICJtaW51dGVzIjogIjkifSwgeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1ODQ1Ylx1ODk3Zlx1OTljNSIsICJtaW51dGVzIjogIjEwIn1dfQ==", "imgs": ["../imgs/p884dc36704d6.jpg", "../imgs/p21c9c4f23580.jpg", "../imgs/p6af3df3b7b11.jpg", "../imgs/pf03603e39c4f.jpg", "../imgs/p809b06b8223e.jpg"], "use_zone": "第一種住居地域", "front_direction": "角地・北東4m(公道)接面10.1m/西5.9m(公道)接面5.2m", "road_width": 4.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 6.79, "floors_str": "地上3F＋半地下 / 8戸", "has_basement": true, "construction_cost": 9565, "total_cost": 15545, "annual_rent": 1056, "far_used": 152, "effective_far": 160, "consumed_bcr": 75, "max_bcr": 80, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B-", "site": "三井のリハウス", "ward": "台東区", "address": "台東区千束4丁目", "price_man": 23000.0, "area_sqm": 152.83, "tsubo": 46.2, "tsubo_unit": 498, "stations": [{"name": "三ノ輪駅", "walk": "10"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FN6BCA14/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTNmMFx1Njc3MVx1NTMzYVx1NTM0M1x1Njc1ZjRcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTUyLjgzLCAibGFuZF9wcmljZSI6IDIzMDAwLjAsICJyb2FkX3dpZHRoIjogMjIuMCwgImJjciI6IDgwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogNTAwLjAsICJ1c2Vfem9uZSI6ICJcdTU1NDZcdTY5NmRcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1MzA2YVx1MzA1NyIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICJcdTMwNmFcdTMwNTciLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTMxN1x1Njc3MSIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NGUwOVx1MzBjZVx1OGYyYVx1OTljNSIsICJtaW51dGVzIjogIjEwIn1dfQ==", "imgs": ["../imgs/p30dcf4665d8b.jpg", "../imgs/p0badf00c6e48.jpg", "../imgs/pa79357d5e043.jpg"], "use_zone": "商業地域", "front_direction": "北東", "road_width": 22.0, "height_district": "なし", "height_district_estimated": true, "shadow_reg": "なし", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 6.47, "floors_str": "地上4F / 12戸", "has_basement": false, "construction_cost": 23757, "total_cost": 46757, "annual_rent": 3024, "far_used": 333.5, "effective_far": 500, "consumed_bcr": 88.6, "max_bcr": 90, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "?", "site": "三井のリハウス", "ward": "1区", "address": "1区立石5丁目", "price_man": 5490.0, "area_sqm": 71.91, "tsubo": 21.8, "tsubo_unit": 252, "stations": [{"name": "お花茶屋駅", "walk": "9"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FQ8BDA08/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIjFcdTUzM2FcdTdhY2JcdTc3ZjM1XHU0ZTAxXHU3NmVlIiwgImxhbmRfYXJlYSI6IDcxLjkxLCAibGFuZF9wcmljZSI6IDU0OTAuMCwgInJvYWRfd2lkdGgiOiA2LjAsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDIwMC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZTJkXHU5YWQ4XHU1YzY0XHU0ZjRmXHU1YzQ1XHU1YzAyXHU3NTI4XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTM1N1x1ODk3ZiIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1MzA0YVx1ODJiMVx1ODMzNlx1NWM0Ylx1OTljNSIsICJtaW51dGVzIjogIjkifV19", "imgs": ["../imgs/pf91fd9647eef.jpg", "../imgs/p90876c260950.jpg", "../imgs/p0d53ca4d8ccb.jpg"], "use_zone": "第一種中高層住居専用地域", "front_direction": "南西", "road_width": 6.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "RC造", "best_yield": 6.42, "floors_str": "地上3F＋半地下 / 8戸", "has_basement": true, "construction_cost": 10963, "total_cost": 16453, "annual_rent": 1056, "far_used": 176.6, "effective_far": 200, "consumed_bcr": 70, "max_bcr": 70, "disqualified": false, "disqualify_reason": "", "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "?", "site": "三井のリハウス", "ward": "2区", "address": "2区立石5丁目", "price_man": 5490.0, "area_sqm": 71.92, "tsubo": 21.8, "tsubo_unit": 252, "stations": [{"name": "お花茶屋駅", "walk": "9"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FQ8BDA09/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIjJcdTUzM2FcdTdhY2JcdTc3ZjM1XHU0ZTAxXHU3NmVlIiwgImxhbmRfYXJlYSI6IDcxLjkyLCAibGFuZF9wcmljZSI6IDU0OTAuMCwgInJvYWRfd2lkdGgiOiA2LjAsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDIwMC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZTJkXHU5YWQ4XHU1YzY0XHU0ZjRmXHU1YzQ1XHU1YzAyXHU3NTI4XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTM1N1x1ODk3ZiIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1MzA0YVx1ODJiMVx1ODMzNlx1NWM0Ylx1OTljNSIsICJtaW51dGVzIjogIjkifV19", "imgs": ["../imgs/p8bdd3e2355c3.jpg", "../imgs/p7d99a595bd28.jpg", "../imgs/pb54c36d784dc.jpg"], "use_zone": "第一種中高層住居専用地域", "front_direction": "南西", "road_width": 6.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "RC造", "best_yield": 6.42, "floors_str": "地上3F＋半地下 / 8戸", "has_basement": true, "construction_cost": 10965, "total_cost": 16455, "annual_rent": 1056, "far_used": 176.6, "effective_far": 200, "consumed_bcr": 70, "max_bcr": 70, "disqualified": false, "disqualify_reason": "", "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B-", "site": "アットホーム", "ward": "大田区", "address": "大田区東蒲田2丁目", "price_man": 14000.0, "area_sqm": 161.17, "tsubo": 48.8, "tsubo_unit": 287, "stations": [{"name": "「京急蒲田」駅", "walk": "7"}], "url": "https://www.athome.co.jp/tochi/1018053487/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTkyN1x1NzUzMFx1NTMzYVx1Njc3MVx1ODRiMlx1NzUzMDJcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTYxLjE3LCAibGFuZF9wcmljZSI6IDE0MDAwLjAsICJyb2FkX3dpZHRoIjogNC44LCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1NmU5Nlx1NWRlNVx1Njk2ZFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZTA5XHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzMTciLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiB0cnVlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1MzAwY1x1NGVhY1x1NjAyNVx1ODRiMlx1NzUzMFx1MzAwZFx1OTljNSIsICJtaW51dGVzIjogIjcifV19", "imgs": ["../imgs/p094f3aa816c3.jpg", "../imgs/pc7c1e6652516.jpg", "../imgs/p7759cb883f41.jpg"], "use_zone": "準工業地域", "front_direction": "北", "road_width": 4.8, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 6.41, "floors_str": "地上4F / 12戸", "has_basement": false, "construction_cost": 15185, "total_cost": 29185, "annual_rent": 1872, "far_used": 194.9, "effective_far": 200, "consumed_bcr": 53.7, "max_bcr": 80, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "B-", "site": "三井のリハウス", "ward": "品川区", "address": "品川区中延5丁目 売", "price_man": 10800.0, "area_sqm": 98.59, "tsubo": 29.8, "tsubo_unit": 362, "stations": [{"name": "荏原町駅", "walk": "3"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/F7FBGA22/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTRjMVx1NWRkZFx1NTMzYVx1NGUyZFx1NWVmNjVcdTRlMDFcdTc2ZWUgXHU1OGYyIiwgImxhbmRfYXJlYSI6IDk4LjU5LCAibGFuZF9wcmljZSI6IDEwODAwLjAsICJyb2FkX3dpZHRoIjogMi45LCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1N2IyY1x1NGUwMFx1N2EyZVx1NGY0Zlx1NWM0NVx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzNTciLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTgzNGZcdTUzOWZcdTc1M2FcdTk5YzUiLCAibWludXRlcyI6ICIzIn1dfQ==", "imgs": ["../imgs/p2449a1eea83e.jpg", "../imgs/p48e6826ff69b.jpg", "../imgs/p24c7f1e317a3.jpg"], "use_zone": "第一種住居地域", "front_direction": "南", "road_width": 2.9, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 6.4, "floors_str": "地上3F＋半地下 / 12戸", "has_basement": true, "construction_cost": 12452, "total_cost": 23252, "annual_rent": 1488, "far_used": 159.9, "effective_far": 160, "consumed_bcr": 61.4, "max_bcr": 70, "disqualified": false, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "江戸川区", "address": "江戸川区北小岩2丁目", "price_man": 23000.0, "area_sqm": 345.24, "tsubo": 104.4, "tsubo_unit": 220, "stations": [{"name": "京成小岩駅", "walk": "6"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FQ8BDA0B/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NmM1Zlx1NjIzOFx1NWRkZFx1NTMzYVx1NTMxN1x1NWMwZlx1NWNhOTJcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMzQ1LjI0LCAibGFuZF9wcmljZSI6IDIzMDAwLjAsICJyb2FkX3dpZHRoIjogNi4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAzMDAuMCwgInVzZV96b25lIjogIlx1N2IyY1x1NGUwMFx1N2EyZVx1NGY0Zlx1NWM0NVx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTg5N2YiLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTRlYWNcdTYyMTBcdTVjMGZcdTVjYTlcdTk5YzUiLCAibWludXRlcyI6ICI2In1dfQ==", "imgs": ["../imgs/p8f2d3d7d1bd1.jpg", "../imgs/p6a1087b30924.jpg", "../imgs/p45c29333847a.jpg"], "use_zone": "第一種住居地域", "front_direction": "西", "road_width": 6.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 5.92, "floors_str": "地上3F / 9戸", "has_basement": false, "construction_cost": 22578, "total_cost": 45578, "annual_rent": 2700, "far_used": 142.1, "effective_far": 240, "consumed_bcr": 49.7, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "品川区", "address": "品川区東中延2丁目", "price_man": 8980.0, "area_sqm": 69.74, "tsubo": 21.1, "tsubo_unit": 426, "stations": [{"name": "荏原中延駅", "walk": "4"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/F7FBGA16/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTRjMVx1NWRkZFx1NTMzYVx1Njc3MVx1NGUyZFx1NWVmNjJcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogNjkuNzQsICJsYW5kX3ByaWNlIjogODk4MC4wLCAicm9hZF93aWR0aCI6IDIuOCwgImJjciI6IDYwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogMjAwLjAsICJ1c2Vfem9uZSI6ICJcdTdiMmNcdTRlMDBcdTdhMmVcdTRmNGZcdTVjNDVcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1N2IyY1x1NGU4Y1x1N2EyZVx1OWFkOFx1NWVhNlx1NTczMFx1NTMzYSIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICI1aC0zaCIsICJmcm9udF9kaXJlY3Rpb24iOiAiXHU2NzcxIiwgImlzX2ZpcmVfem9uZSI6IHRydWUsICJpc19jb3JuZXJfbG90IjogZmFsc2UsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU4MzRmXHU1MzlmXHU0ZTJkXHU1ZWY2XHU5OWM1IiwgIm1pbnV0ZXMiOiAiNCJ9XX0=", "imgs": ["../imgs/pde5251eef3aa.jpg", "../imgs/p4721e9f3c3fa.jpg", "../imgs/p9c6fdb02d365.jpg"], "use_zone": "第一種住居地域", "front_direction": "東", "road_width": 2.8, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 5.78, "floors_str": "地上3F＋半地下 / 8戸", "has_basement": true, "construction_cost": 9296, "total_cost": 18276, "annual_rent": 1056, "far_used": 160, "effective_far": 160, "consumed_bcr": 64.8, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "品川区", "address": "品川区北品川1丁目", "price_man": 11900.0, "area_sqm": 116.13, "tsubo": 35.1, "tsubo_unit": 339, "stations": [{"name": "北品川駅", "walk": "4"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FKXAWA01/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTRjMVx1NWRkZFx1NTMzYVx1NTMxN1x1NTRjMVx1NWRkZDFcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTE2LjEzLCAibGFuZF9wcmljZSI6IDExOTAwLjAsICJyb2FkX3dpZHRoIjogMy4xLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAzMDAuMCwgInVzZV96b25lIjogIlx1N2IyY1x1NGUwMFx1N2EyZVx1NGY0Zlx1NWM0NVx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzNTdcdTY3NzEiLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiB0cnVlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NTMxN1x1NTRjMVx1NWRkZFx1OTljNSIsICJtaW51dGVzIjogIjQifV19", "imgs": ["../imgs/pbc22969149c6.jpg", "../imgs/p974afc6d864e.jpg", "../imgs/p7ea80bf43e38.jpg"], "use_zone": "第一種住居地域", "front_direction": "南東", "road_width": 3.1, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 5.75, "floors_str": "地上3F＋半地下 / 12戸", "has_basement": true, "construction_cost": 13974, "total_cost": 25874, "annual_rent": 1488, "far_used": 147.9, "effective_far": 160, "consumed_bcr": 58.5, "max_bcr": 80, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "?", "site": "住友不動産販売", "ward": "東京都江戸川区", "address": "東京都江戸川区北小岩２丁目", "price_man": 23000.0, "area_sqm": 345.24, "tsubo": 104.4, "tsubo_unit": 220, "stations": [{"name": "京成小岩駅", "walk": "6"}, {"name": "小岩駅", "walk": "15"}, {"name": "江戸川駅", "walk": "11"}], "url": "https://www.stepon.co.jp/tochi/detail_16221003/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1Njc3MVx1NGVhY1x1OTBmZFx1NmM1Zlx1NjIzOFx1NWRkZFx1NTMzYVx1NTMxN1x1NWMwZlx1NWNhOVx1ZmYxMlx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAzNDUuMjQsICJsYW5kX3ByaWNlIjogMjMwMDAuMCwgInJvYWRfd2lkdGgiOiA2LjAsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDI0MC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZjRmXHU1YzQ1XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1ODk3ZiIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NGVhY1x1NjIxMFx1NWMwZlx1NWNhOVx1OTljNSIsICJtaW51dGVzIjogIjYifSwgeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NWMwZlx1NWNhOVx1OTljNSIsICJtaW51dGVzIjogIjE1In0sIHsibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTZjNWZcdTYyMzhcdTVkZGRcdTk5YzUiLCAibWludXRlcyI6ICIxMSJ9XX0=", "imgs": ["../imgs/p706ac6475f58.jpg", "../imgs/p69968c7d63ea.jpg", "../imgs/p66c731d71fb0.jpg", "../imgs/p4ba7da9e1e66.jpg", "../imgs/p6355a307aa6b.jpg"], "use_zone": "第一種住居地域", "front_direction": "一方道路・西6m(公道)接面13.4m", "road_width": 6.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "RC造", "best_yield": 5.37, "floors_str": "地上3F / 9戸", "has_basement": false, "construction_cost": 27250, "total_cost": 50250, "annual_rent": 2700, "far_used": 142.1, "effective_far": 240, "consumed_bcr": 49.7, "max_bcr": 70, "disqualified": false, "disqualify_reason": "", "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "中野区", "address": "中野区中野1丁目", "price_man": 19200.0, "area_sqm": 157.86, "tsubo": 47.8, "tsubo_unit": 402, "stations": [{"name": "東中野駅", "walk": "10"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FKJASA0E/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NGUyZFx1OTFjZVx1NTMzYVx1NGUyZFx1OTFjZTFcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTU3Ljg2LCAibGFuZF9wcmljZSI6IDE5MjAwLjAsICJyb2FkX3dpZHRoIjogNC4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAyMDAuMCwgInVzZV96b25lIjogIlx1N2IyY1x1NGUwMFx1N2EyZVx1NGUyZFx1OWFkOFx1NWM2NFx1NGY0Zlx1NWM0NVx1NWMwMlx1NzUyOFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTY3NzEiLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTY3NzFcdTRlMmRcdTkxY2VcdTk5YzUiLCAibWludXRlcyI6ICIxMCJ9XX0=", "imgs": ["../imgs/p50d071a6b58f.jpg", "../imgs/p24c845333d50.jpg", "../imgs/p1c3432eab1b9.jpg"], "use_zone": "第一種中高層住居専用地域", "front_direction": "東", "road_width": 4.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 4.92, "floors_str": "地上3F / 9戸", "has_basement": false, "construction_cost": 12270, "total_cost": 31470, "annual_rent": 1548, "far_used": 156.1, "effective_far": 160, "consumed_bcr": 57.1, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "住友不動産販売", "ward": "墨田区", "address": "墨田区横川４丁目", "price_man": 19800.0, "area_sqm": 122.08, "tsubo": 36.9, "tsubo_unit": 536, "stations": [{"name": "押上駅", "walk": "7"}], "url": "https://www.stepon.co.jp/tochi/detail_16841001/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NThhOFx1NzUzMFx1NTMzYVx1NmEyYVx1NWRkZFx1ZmYxNFx1NGUwMVx1NzZlZSIsICJsYW5kX2FyZWEiOiAxMjIuMDgsICJsYW5kX3ByaWNlIjogMTk4MDAuMCwgInJvYWRfd2lkdGgiOiA0LjAsICJiY3IiOiA4MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDMwMC4wLCAidXNlX3pvbmUiOiAiXHU4ZmQxXHU5NmEzXHU1NTQ2XHU2OTZkXHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlMDlcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1ODk3ZiIsICJpc19maXJlX3pvbmUiOiBmYWxzZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTYyYmNcdTRlMGFcdTk5YzUiLCAibWludXRlcyI6ICI3In1dfQ==", "imgs": ["../imgs/p41f2724c3951.jpg", "../imgs/pb1e6967c03af.jpg", "../imgs/p6920b4dbb202.jpg", "../imgs/p99d65cfe5ae3.jpg", "../imgs/p14c9e251513d.jpg"], "use_zone": "近隣商業地域", "front_direction": "一方道路・西5.9m(公道)接面7.4m", "road_width": 4.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 4.8, "floors_str": "地上3F / 9戸", "has_basement": false, "construction_cost": 12464, "total_cost": 32264, "annual_rent": 1548, "far_used": 205.3, "effective_far": 240, "consumed_bcr": 75, "max_bcr": 80, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "目黒区", "address": "目黒区下目黒2丁目", "price_man": 18000.0, "area_sqm": 85.67, "tsubo": 25.9, "tsubo_unit": 695, "stations": [{"name": "目黒駅", "walk": "9"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/F07BDA06/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NzZlZVx1OWVkMlx1NTMzYVx1NGUwYlx1NzZlZVx1OWVkMjJcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogODUuNjcsICJsYW5kX3ByaWNlIjogMTgwMDAuMCwgInJvYWRfd2lkdGgiOiA0LjUsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDMwMC4wLCAidXNlX3pvbmUiOiAiXHU2ZTk2XHU1ZGU1XHU2OTZkXHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlMDlcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTMxNyIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IHRydWUsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU3NmVlXHU5ZWQyXHU5OWM1IiwgIm1pbnV0ZXMiOiAiOSJ9XX0=", "imgs": ["../imgs/p6b66f59d6a8f.jpg", "../imgs/p5794427fcfa0.jpg", "../imgs/pd07c616477f4.jpg"], "use_zone": "準工業地域", "front_direction": "北", "road_width": 4.5, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 4.48, "floors_str": "地上4F / 8戸", "has_basement": false, "construction_cost": 9843, "total_cost": 27843, "annual_rent": 1248, "far_used": 225.2, "effective_far": 270, "consumed_bcr": 63.3, "max_bcr": 80, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "品川区", "address": "品川区東中延1丁目", "price_man": 18500.0, "area_sqm": 74.22, "tsubo": 22.5, "tsubo_unit": 824, "stations": [{"name": "戸越駅", "walk": "5"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/F7FBGA1D/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTRjMVx1NWRkZFx1NTMzYVx1Njc3MVx1NGUyZFx1NWVmNjFcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogNzQuMjIsICJsYW5kX3ByaWNlIjogMTg1MDAuMCwgInJvYWRfd2lkdGgiOiA0LjAsICJiY3IiOiA4MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDUwMC4wLCAidXNlX3pvbmUiOiAiXHU1NTQ2XHU2OTZkXHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTMwNmFcdTMwNTciLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiXHUzMDZhXHUzMDU3IiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzNTciLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiB0cnVlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NjIzOFx1OGQ4YVx1OTljNSIsICJtaW51dGVzIjogIjUifV19", "imgs": ["../imgs/p61939ecbbb7c.jpg", "../imgs/p17c36463d327.jpg", "../imgs/p5dd242aa50c1.jpg"], "use_zone": "商業地域", "front_direction": "南", "road_width": 4.0, "height_district": "なし", "height_district_estimated": true, "shadow_reg": "なし", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 4.3, "floors_str": "地上5F＋半地下 / 12戸", "has_basement": true, "construction_cost": 11633, "total_cost": 30133, "annual_rent": 1296, "far_used": 205.5, "effective_far": 240, "consumed_bcr": 50.8, "max_bcr": 100, "disqualified": true, "disqualify_reason": "全戸1Kのため利回り信頼性低", "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "品川区", "address": "品川区小山5丁目", "price_man": 15300.0, "area_sqm": 80.76, "tsubo": 24.4, "tsubo_unit": 626, "stations": [{"name": "武蔵小山駅", "walk": "5"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FSDBDA03/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NTRjMVx1NWRkZFx1NTMzYVx1NWMwZlx1NWM3MTVcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogODAuNzYsICJsYW5kX3ByaWNlIjogMTUzMDAuMCwgInJvYWRfd2lkdGgiOiA0LjEsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDMwMC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZjRmXHU1YzQ1XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTMxN1x1Njc3MSIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NmI2Nlx1ODUzNVx1NWMwZlx1NWM3MVx1OTljNSIsICJtaW51dGVzIjogIjUifV19", "imgs": ["../imgs/p39d413b47da6.jpg", "../imgs/pfbd796b455ec.jpg", "../imgs/pd0ae74847148.jpg"], "use_zone": "第一種住居地域", "front_direction": "北東", "road_width": 4.1, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "Kフレーム", "best_yield": 3.86, "floors_str": "地上4F / 8戸", "has_basement": false, "construction_cost": 7094, "total_cost": 22394, "annual_rent": 864, "far_used": 163.9, "effective_far": 164, "consumed_bcr": 48.4, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "住友不動産販売", "ward": "新宿区", "address": "新宿区東五軒町", "price_man": 100000.0, "area_sqm": 365.95, "tsubo": 110.7, "tsubo_unit": 903, "stations": [{"name": "江戸川橋駅", "walk": "9"}], "url": "https://www.stepon.co.jp/tochi/detail_16111004/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NjViMFx1NWJiZlx1NTMzYVx1Njc3MVx1NGU5NFx1OGVkMlx1NzUzYSIsICJsYW5kX2FyZWEiOiAzNjUuOTUsICJsYW5kX3ByaWNlIjogMTAwMDAwLjAsICJyb2FkX3dpZHRoIjogNi4wLCAiYmNyIjogODAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAzMDAuMCwgInVzZV96b25lIjogIlx1NmU5Nlx1NWRlNVx1Njk2ZFx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZTA5XHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTY3NzEiLCAiaXNfZmlyZV96b25lIjogZmFsc2UsICJpc19jb3JuZXJfbG90IjogZmFsc2UsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU2YzVmXHU2MjM4XHU1ZGRkXHU2YTRiXHU5OWM1IiwgIm1pbnV0ZXMiOiAiOSJ9XX0=", "imgs": ["../imgs/p4db2cdd9df53.jpg", "../imgs/p9c76e9b6b5f4.jpg", "../imgs/p0340292c8642.jpg", "../imgs/p5ccd294b4c74.jpg", "../imgs/pdfc0a34ac35a.jpg"], "use_zone": "準工業地域", "front_direction": "一方道路・東7.8m(公道)接面20m", "road_width": 6.0, "height_district": "第三種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 3.31, "floors_str": "地上4F / 16戸", "has_basement": false, "construction_cost": 45006, "total_cost": 145006, "annual_rent": 4800, "far_used": 237.7, "effective_far": 300, "consumed_bcr": 61.6, "max_bcr": 80, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "渋谷区", "address": "渋谷区代々木1丁目", "price_man": 35000.0, "area_sqm": 105.96, "tsubo": 32.1, "tsubo_unit": 1092, "stations": [{"name": "代々木駅", "walk": "4"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FN5BGA60/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NmUwYlx1OGMzN1x1NTMzYVx1NGVlM1x1MzAwNVx1NjcyODFcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTA1Ljk2LCAibGFuZF9wcmljZSI6IDM1MDAwLjAsICJyb2FkX3dpZHRoIjogNC4wLCAiYmNyIjogNjAuMCwgImZsb29yX2FyZWFfcmF0aW8iOiAzMDAuMCwgInVzZV96b25lIjogIlx1N2IyY1x1NGU4Y1x1N2EyZVx1NGY0Zlx1NWM0NVx1NTczMFx1NTdkZiIsICJoZWlnaHRfZGlzdHJpY3QiOiAiXHU3YjJjXHU0ZThjXHU3YTJlXHU5YWQ4XHU1ZWE2XHU1NzMwXHU1MzNhIiwgInNoYWRvd19yZWd1bGF0aW9uIjogIjVoLTNoIiwgImZyb250X2RpcmVjdGlvbiI6ICJcdTUzNTciLCAiaXNfZmlyZV96b25lIjogdHJ1ZSwgImlzX2Nvcm5lcl9sb3QiOiBmYWxzZSwgImZyb250YWdlIjogbnVsbCwgImRlcHRoIjogbnVsbCwgInN0YXRpb25zIjogW3sibGluZSI6ICIiLCAic3RhdGlvbiI6ICJcdTRlZTNcdTMwMDVcdTY3MjhcdTk5YzUiLCAibWludXRlcyI6ICI0In1dfQ==", "imgs": ["../imgs/p6d1a602692e6.jpg", "../imgs/p68fc7f2e0bc8.jpg", "../imgs/p2b222d53457b.jpg"], "use_zone": "第二種住居地域", "front_direction": "南", "road_width": 4.0, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 3.11, "floors_str": "地上3F＋半地下 / 12戸", "has_basement": true, "construction_cost": 12860, "total_cost": 47860, "annual_rent": 1488, "far_used": 146.8, "effective_far": 160, "consumed_bcr": 59, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "渋谷区", "address": "渋谷区神宮前5丁目", "price_man": 39200.0, "area_sqm": 85.67, "tsubo": 25.9, "tsubo_unit": 1513, "stations": [{"name": "明治神宮前駅", "walk": "6"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FBIBDA09/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NmUwYlx1OGMzN1x1NTMzYVx1Nzk1ZVx1NWJhZVx1NTI0ZDVcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogODUuNjcsICJsYW5kX3ByaWNlIjogMzkyMDAuMCwgInJvYWRfd2lkdGgiOiAzLjQsICJiY3IiOiA2MC4wLCAiZmxvb3JfYXJlYV9yYXRpbyI6IDMwMC4wLCAidXNlX3pvbmUiOiAiXHU3YjJjXHU0ZTAwXHU3YTJlXHU0ZjRmXHU1YzQ1XHU1NzMwXHU1N2RmIiwgImhlaWdodF9kaXN0cmljdCI6ICJcdTdiMmNcdTRlOGNcdTdhMmVcdTlhZDhcdTVlYTZcdTU3MzBcdTUzM2EiLCAic2hhZG93X3JlZ3VsYXRpb24iOiAiNWgtM2giLCAiZnJvbnRfZGlyZWN0aW9uIjogIlx1NTM1N1x1Njc3MSIsICJpc19maXJlX3pvbmUiOiB0cnVlLCAiaXNfY29ybmVyX2xvdCI6IGZhbHNlLCAiZnJvbnRhZ2UiOiBudWxsLCAiZGVwdGgiOiBudWxsLCAic3RhdGlvbnMiOiBbeyJsaW5lIjogIiIsICJzdGF0aW9uIjogIlx1NjYwZVx1NmNiYlx1Nzk1ZVx1NWJhZVx1NTI0ZFx1OTljNSIsICJtaW51dGVzIjogIjYifV19", "imgs": ["../imgs/p1e855b0ad1f0.jpg", "../imgs/p188994808114.jpg", "../imgs/pf63bcd16282f.jpg"], "use_zone": "第一種住居地域", "front_direction": "南東", "road_width": 3.4, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 2.12, "floors_str": "地上3F＋半地下 / 8戸", "has_basement": true, "construction_cost": 10614, "total_cost": 49814, "annual_rent": 1056, "far_used": 152.7, "effective_far": 160, "consumed_bcr": 70, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}, {"rank": "NG", "site": "三井のリハウス", "ward": "港区", "address": "港区南麻布3丁目", "price_man": 113800.0, "area_sqm": 165.27, "tsubo": 50.0, "tsubo_unit": 2276, "stations": [{"name": "広尾駅", "walk": "10"}], "url": "https://www.rehouse.co.jp/buy/tochi/bkdetail/FW9AGA86/", "tool_url": "https://hisa924.github.io/property-report/tool/?openExternalBrowser=1#import=eyJhZGRyZXNzIjogIlx1NmUyZlx1NTMzYVx1NTM1N1x1OWViYlx1NWUwMzNcdTRlMDFcdTc2ZWUiLCAibGFuZF9hcmVhIjogMTY1LjI3LCAibGFuZF9wcmljZSI6IDExMzgwMC4wLCAicm9hZF93aWR0aCI6IDUuNCwgImJjciI6IDYwLjAsICJmbG9vcl9hcmVhX3JhdGlvIjogMjAwLjAsICJ1c2Vfem9uZSI6ICJcdTdiMmNcdTRlMDBcdTdhMmVcdTRlMmRcdTlhZDhcdTVjNjRcdTRmNGZcdTVjNDVcdTVjMDJcdTc1MjhcdTU3MzBcdTU3ZGYiLCAiaGVpZ2h0X2Rpc3RyaWN0IjogIlx1N2IyY1x1NGU4Y1x1N2EyZVx1OWFkOFx1NWVhNlx1NTczMFx1NTMzYSIsICJzaGFkb3dfcmVndWxhdGlvbiI6ICI1aC0zaCIsICJmcm9udF9kaXJlY3Rpb24iOiAiXHU1MzE3IiwgImlzX2ZpcmVfem9uZSI6IHRydWUsICJpc19jb3JuZXJfbG90IjogZmFsc2UsICJmcm9udGFnZSI6IG51bGwsICJkZXB0aCI6IG51bGwsICJzdGF0aW9ucyI6IFt7ImxpbmUiOiAiIiwgInN0YXRpb24iOiAiXHU1ZTgzXHU1YzNlXHU5OWM1IiwgIm1pbnV0ZXMiOiAiMTAifV19", "imgs": ["../imgs/p0ead31da0785.jpg", "../imgs/pd52713f7eb21.jpg", "../imgs/p7cd3caa3c2c3.jpg"], "use_zone": "第一種中高層住居専用地域", "front_direction": "北", "road_width": 5.4, "height_district": "第二種高度地区", "height_district_estimated": true, "shadow_reg": "あり", "shadow_reg_estimated": true, "best_structure": "重量鉄骨", "best_yield": 1.81, "floors_str": "地上5F＋半地下 / 12戸", "has_basement": true, "construction_cost": 21579, "total_cost": 135379, "annual_rent": 2448, "far_used": 196.2, "effective_far": 200, "consumed_bcr": 43.6, "max_bcr": 70, "disqualified": true, "disqualify_reason": null, "frontage": 0, "depth": 0, "is_new": true, "is_hatazao": false}];</script>
+</head>
+<body>
+<div class="floating-date" id="floatingDate">2026年4月15日（水）</div>
+<div class="lightbox" id="lightbox" onclick="if(event.target.id==='lightbox')closeLb()">
+  <span class="lb-close" onclick="closeLb()">&#x2715;</span>
+  <button class="lb-nav prev" onclick="lbNav(-1)">&#8249;</button>
+  <img class="lb-img" id="lb-img" src="" alt="">
+  <button class="lb-nav next" onclick="lbNav(1)">&#8250;</button>
+  <div class="lb-counter" id="lb-counter"></div>
+</div>
+
+<div class="header">
+  <div>
+    <div class="header-title">収益物件レポート</div>
+    <div class="header-date"><a class="date-nav" href="2026-04-14.html" title="前日">&#8249;</a>2026年4月15日（水）<span class="date-nav disabled">&#8250;</span></div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num">28</div><div class="stat-label">収集件数</div></div>
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">有望物件（B以上）</div></div>
+    <div class="stat"><div class="stat-num">7.2%</div><div class="stat-label">最高利回り</div></div>
+  </div>
+  <div class="rank-summary"><span class="rank-badge rank-Bplus">B+ 3件</span>
+<span class="rank-badge rank-B">B- 3件</span>
+<span class="rank-badge rank-NG">その他 22件</span></div>
+  <div class="history-nav">
+    <div class="history-label">過去7日間</div>
+    <div class="history-days"><span id="dynChips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div>
+  </div>
+</div>
+
+<div class="cal-overlay" id="calOverlay" onclick="if(event.target.id==='calOverlay')closeCal()">
+  <div class="cal-box">
+    <div class="cal-header">
+      <button onclick="calNav(-1)">&#8249;</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button onclick="calNav(1)">&#8250;</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">ランク</span>
+  <button class="filter-btn rank-filter active" onclick="filterRank('all',this)">すべて</button>
+  <button class="filter-btn rank-filter" onclick="filterRank('bplus',this)">B+以上</button>
+  <button class="filter-btn rank-filter" onclick="filterRank('b',this)">B</button>
+  <button class="filter-btn rank-filter" onclick="filterRank('ng',this)">NG含む</button>
+  <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
+  <button class="filter-btn new-filter" onclick="toggleNew(this)" style="border-color:#e74c3c;color:#e74c3c">新着のみ</button>
+  <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
+  <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap"><span class="filter-label" style="margin:0">サイト</span>
+  <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
+  <div id="site-filter-btns" style="display:inline-flex;gap:6px"></div></div>
+  <span class="count-label" id="count-label"></span>
+  <select class="sort-select" onchange="sortCards(this.value)">
+    <option value="rank">ランク順</option>
+    <option value="yield">利回り順</option>
+    <option value="price_asc">価格 安い順</option>
+    <option value="price_desc">価格 高い順</option>
+    <option value="area_desc">面積 広い順</option>
+    <option value="far_desc">容積率 高い順</option>
+  </select>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const RANK_ORDER = {"A+":0,"A":1,"A-":2,"B+":3,"B":4,"B-":5,"C+":6,"C":7,"C-":8,"D+":9,"D":10,"D-":11,"NG":12};
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fman(v){return v>=10000?(v/10000).toFixed(1)+"億円":v.toLocaleString()+"万円";}
+function rankCls(r){
+  if(r==="A+")return"Aplus";
+  if(r==="A"||r==="A-")return"A";
+  if(r==="B+")return"Bplus";
+  if(r==="B"||r==="B-")return"B";
+  return"NG";
+}
+
+function buildCard(p){
+  const rc = rankCls(p.rank);
+  let imgHtml;
+  if(p.imgs && p.imgs.length > 1){
+    const uid = "sl"+Math.random().toString(36).slice(2,8);
+    const imgsJson = JSON.stringify(p.imgs).replace(/'/g,"&#39;");
+    const slides = p.imgs.map((src,i)=>`<img src="${esc(src)}" loading="lazy" onclick="lbFromSlider('${uid}',${i})">`).join("");
+    const dots = p.imgs.map((_,i)=>`<span class="img-dot${i===0?' active':''}" onclick="slideTo('${uid}', ${i})"></span>`).join("");
+    imgHtml = `<div class="img-slider" id="${uid}" data-imgs='${imgsJson}'>
+      <div class="img-slides" id="${uid}_slides">${slides}</div>
+      <button class="img-btn prev" onclick="slide('${uid}',-1)">&#8249;</button>
+      <button class="img-btn next" onclick="slide('${uid}',1)">&#8250;</button>
+      <div class="img-dots" id="${uid}_dots">${dots}</div>
+    </div>`;
+  } else if(p.imgs && p.imgs.length === 1){
+    imgHtml = `<img src="${esc(p.imgs[0])}" loading="lazy" onclick="openLb(p.imgs,0)" onerror="this.parentNode.innerHTML='<div class=card-img-fallback>&#x1F3D7;</div>'">`;
+  } else {
+    imgHtml = `<div class="card-img-fallback">&#x1F3D7;</div>`;
+  }
+
+  // 土地情報
+  const hdEst = p.height_district_estimated;
+  const hdHtml = p.height_district
+    ? `<div class="val${hdEst?" estimated":""}">` + esc(p.height_district) + `</div>`
+    : `<div class="val missing">未取得</div>`;
+  const srEst = p.shadow_reg_estimated;
+  const srHtml = p.shadow_reg
+    ? `<div class="val${srEst?" estimated":""}">` + esc(p.shadow_reg) + `</div>`
+    : `<div class="val missing">—</div>`;
+  let road = "";
+  if(p.front_direction && /[\d.]+\s*m/.test(p.front_direction)) road = p.front_direction;
+  else if(p.front_direction && p.road_width) road = p.front_direction+" "+p.road_width.toFixed(1)+"m";
+  else if(p.front_direction) road = p.front_direction;
+  else if(p.road_width) road = p.road_width.toFixed(1)+"m";
+  const roadHtml = road ? `<div class="val">${esc(road)}</div>` : `<div class="val missing">未取得</div>`;
+
+  // 想定プラン
+  let planHtml = "";
+  if(p.best_structure && p.best_yield > 0){
+    const farPct = p.effective_far>0 ? Math.round(p.far_used/p.effective_far*100) : 0;
+    const bcrPct = p.max_bcr>0 ? Math.round(p.consumed_bcr/p.max_bcr*100) : 0;
+    const baseBadge = p.has_basement ? ` <span style="background:#4caf50;color:white;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;">半地下あり</span>` : "";
+    planHtml = `
+    <div class="divider"></div>
+    <div class="plan-title">想定プラン${baseBadge}</div>
+    <div class="plan-grid">
+      <div class="plan-item"><div class="lbl">構造</div><div class="val">${esc(p.best_structure)}</div></div>
+      <div class="plan-item"><div class="lbl">表面利回り</div><div class="val yield">${p.best_yield.toFixed(1)}%</div></div>
+      <div class="plan-item"><div class="lbl">規模</div><div class="val">${esc(p.floors_str)}</div></div>
+      <div class="plan-item"><div class="lbl">建築費概算</div><div class="val">${fman(p.construction_cost)}</div></div>
+      <div class="plan-item"><div class="lbl">総投資額</div><div class="val">${fman(p.total_cost)}</div></div>
+      <div class="plan-item"><div class="lbl">年間賃料</div><div class="val good">約${fman(p.annual_rent)}</div></div>
+    </div>
+    ${p.effective_far>0?`<div class="far-bar"><div class="far-bar-label"><span>容積率消化 ${p.far_used}% / ${p.effective_far}%</span><span>${farPct}%</span></div><div class="far-bar-track"><div class="far-bar-fill" style="width:${Math.min(farPct,100)}%"></div></div></div>`:""}
+    ${p.max_bcr>0?`<div class="far-bar"><div class="far-bar-label"><span>建蔽率消化 ${p.consumed_bcr}% / ${p.max_bcr}%</span><span>${bcrPct}%</span></div><div class="far-bar-track"><div class="far-bar-fill" style="width:${Math.min(bcrPct,100)}%;background:linear-gradient(90deg,#81c784,#388e3c)"></div></div></div>`:""}`;
+  } else if(p.disqualified){
+    planHtml = `<div class="divider"></div><div class="ng-reason">NG: ${esc(p.disqualify_reason||p.rank)}</div>`;
+  }
+
+  const wrapOpen = (p.imgs&&p.imgs.length>1) ? `` : `<div class="card-img">`;
+  const wrapClose = (p.imgs&&p.imgs.length>1) ? `` : `</div>`;
+  const newTag = p.is_new ? '<span class="new-tag">NEW</span>' : '';
+  const hatazaoTag = p.is_hatazao ? '<span class="hatazao-tag">旗竿地</span>' : '';
+  const overlayInner = `<span class="rank-tag ${rc}">${p.rank==="A+"?"★":""}${esc(p.rank)}</span>${p.has_basement?'<span class="basement-tag">半地下あり</span>':""}${newTag}${hatazaoTag}`;
+  // スライダーの場合はimg-sliderの中にオーバーレイを注入
+  const finalImgHtml = (p.imgs&&p.imgs.length>1)
+    ? imgHtml.replace('</div>', overlayInner+'</div>')
+    : imgHtml;
+
+  return `<div class="card" data-rank="${esc(p.rank)}" data-site="${esc(p.site)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}" data-new="${p.is_new?'true':'false'}" data-basement="${p.has_basement?'true':'false'}">
+  ${wrapOpen}
+    ${finalImgHtml}
+    ${(p.imgs&&p.imgs.length<=1)?overlayInner:""}
+  ${wrapClose}
+  <div class="card-body">
+    <div class="card-address">東京都${esc(p.ward)}${p.site?` <span style="font-size:10px;color:#bbb;font-weight:400;">・${esc(p.site)}</span>`:""}</div>
+    <div class="card-location">${esc(p.address)}</div>
+    <div class="card-price">${fman(p.price_man)} <span class="card-price-sub">${p.tsubo_unit>0?"（坪"+p.tsubo_unit.toLocaleString()+"万）":""}</span></div>
+    <div class="card-info">
+      <div class="card-info-item"><span>面積</span>${p.area_sqm.toFixed(1)}㎡（${p.tsubo.toFixed(1)}坪）</div>
+      ${p.stations&&p.stations.length?`<div class="card-info-item"><span>最寄り駅</span>${p.stations.map(s=>esc(s.name)+(s.walk?" 徒歩"+s.walk+"分":"")).join(" / ")}</div>`:""}
+    </div>
+    <div class="land-detail">
+      <div class="land-detail-item"><div class="lbl">用途地域</div><div class="val">${esc(p.use_zone)||'<span class="missing">未取得</span>'}</div></div>
+      <div class="land-detail-item"><div class="lbl">前面道路</div>${roadHtml}</div>
+      <div class="land-detail-item"><div class="lbl">高度地区</div>${hdHtml}</div>
+      <div class="land-detail-item"><div class="lbl">日影規制</div>${srHtml}</div>
+      ${p.frontage>0?`<div class="land-detail-item"><div class="lbl">間口</div><div class="val${p.is_hatazao?' estimated':''}">${p.frontage.toFixed(1)}m</div></div>`:""}
+      ${p.depth>0?`<div class="land-detail-item"><div class="lbl">奥行き</div><div class="val">${p.depth.toFixed(1)}m</div></div>`:""}
+
+    </div>
+    ${planHtml}
+  </div>
+  <div class="card-footer">
+    ${p.url?`<a class="btn btn-secondary" href="${esc(p.url)}" target="_blank">物件を見る</a>`:`<span class="btn btn-secondary" style="opacity:.4;pointer-events:none">物件情報なし</span>`}
+    ${p.tool_url?`<a class="btn btn-primary" href="${esc(p.tool_url)}" target="_blank">マンションツールで試算</a>`:""}
+  </div>
+</div>`;
+}
+
+let _activeRank="all";
+let _activeSite="all";
+let _newOnly=false;
+
+function _applyFilters(){
+  document.querySelectorAll(".card").forEach(card=>{
+    const r=card.dataset.rank;
+    const s=card.dataset.site||"";
+    let rankOk=false;
+    if(_activeRank==="all") rankOk=true;
+    else if(_activeRank==="bplus") rankOk=["A+","A","A-","B+"].includes(r);
+    else if(_activeRank==="b") rankOk=["B","B-"].includes(r);
+    else if(_activeRank==="ng") rankOk=true;
+    const siteOk=(_activeSite==="all")||s===_activeSite;
+    const newOk=!_newOnly||card.dataset.new==="true";
+    card.style.display=(rankOk&&siteOk&&newOk)?"":"none";
+  });
+  updateCount();
+}
+
+function toggleNew(btn){
+  _newOnly=!_newOnly;
+  btn.classList.toggle("active");
+  if(_newOnly){btn.style.background="#e74c3c";btn.style.color="white";btn.style.borderColor="#e74c3c";}
+  else{btn.style.background="white";btn.style.color="#e74c3c";btn.style.borderColor="#e74c3c";}
+  _applyFilters();
+}
+
+function renderAll(){
+  const sorted=[...DATA].sort((a,b)=>(RANK_ORDER[a.rank]??9)-(RANK_ORDER[b.rank]??9)||b.best_yield-a.best_yield);
+  document.getElementById("grid").innerHTML=sorted.map(buildCard).join("");
+  // サイトフィルターボタンを動的生成
+  const SHORT_SITE={"アットホーム":"アットH","三井のリハウス":"三井","住友不動産販売":"住友"};
+  const sites=[...new Set(DATA.map(p=>p.site).filter(Boolean))].sort();
+  const container=document.getElementById("site-filter-btns");
+  container.innerHTML=sites.map(s=>
+    `<button class="filter-btn site-filter" onclick="filterSite('${s.replace(/'/g,"\'")}',null,this)">${esc(SHORT_SITE[s]||s)}</button>`
+  ).join("");
+  updateCount();
+}
+
+function filterRank(f,btn){
+  _activeRank=f;
+  document.querySelectorAll(".rank-filter").forEach(b=>b.classList.remove("active"));
+  if(btn)btn.classList.add("active");
+  _applyFilters();
+}
+
+function filterSite(s,_,btn){
+  _activeSite=s;
+  document.querySelectorAll(".site-filter").forEach(b=>b.classList.remove("active"));
+  if(btn)btn.classList.add("active");
+  _applyFilters();
+}
+
+function sortCards(by){
+  const grid=document.getElementById("grid");
+  const cards=[...grid.querySelectorAll(".card")];
+  cards.sort((a,b)=>{
+    if(by==="rank") return (RANK_ORDER[a.dataset.rank]??9)-(RANK_ORDER[b.dataset.rank]??9)||parseFloat(b.dataset.yield)-parseFloat(a.dataset.yield);
+    if(by==="yield") return parseFloat(b.dataset.yield)-parseFloat(a.dataset.yield);
+    if(by==="price_asc") return parseFloat(a.dataset.price)-parseFloat(b.dataset.price);
+    if(by==="price_desc") return parseFloat(b.dataset.price)-parseFloat(a.dataset.price);
+    if(by==="area_desc") return parseFloat(b.dataset.area)-parseFloat(a.dataset.area);
+    if(by==="far_desc") return parseFloat(b.dataset.far)-parseFloat(a.dataset.far);
+  });
+  cards.forEach(c=>grid.appendChild(c));
+}
+
+function updateCount(){
+  const all=document.querySelectorAll(".card");
+  const vis=[...all].filter(c=>c.style.display!=="none").length;
+  document.getElementById("count-label").textContent=`${vis}件表示 / 全${all.length}件`;
+}
+
+function slide(uid, dir){
+  const el = document.getElementById(uid);
+  if(!el) return;
+  const slides = el.querySelectorAll(".img-slides img");
+  const dots = el.querySelectorAll(".img-dot");
+  let cur = parseInt(el.dataset.idx||0);
+  cur = (cur + dir + slides.length) % slides.length;
+  el.dataset.idx = cur;
+  el.querySelector(".img-slides").style.transform = `translateX(-${cur*100}%)`;
+  dots.forEach((d,i)=>d.classList.toggle("active",i===cur));
+}
+function slideTo(uid, idx){
+  const el = document.getElementById(uid);
+  if(!el) return;
+  const slides = el.querySelectorAll(".img-slides img");
+  const dots = el.querySelectorAll(".img-dot");
+  el.dataset.idx = idx;
+  el.querySelector(".img-slides").style.transform = `translateX(-${idx*100}%)`;
+  dots.forEach((d,i)=>d.classList.toggle("active",i===idx));
+}
+
+// ── ライトボックス ──────────────────────────────
+let _lbI=[], _lbC=0;
+function openLb(imgs,idx){
+  _lbI=imgs; _lbC=idx||0;
+  document.getElementById("lb-img").src=imgs[_lbC];
+  document.getElementById("lb-counter").textContent=imgs.length>1?(_lbC+1)+"/"+imgs.length:"";
+  document.querySelector(".lb-nav.prev").style.display=imgs.length<2?"none":"";
+  document.querySelector(".lb-nav.next").style.display=imgs.length<2?"none":"";
+  document.getElementById("lightbox").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+function closeLb(){document.getElementById("lightbox").classList.remove("open");document.body.style.overflow="";}
+function lbNav(d){_lbC=(_lbC+d+_lbI.length)%_lbI.length;document.getElementById("lb-img").src=_lbI[_lbC];document.getElementById("lb-counter").textContent=(_lbC+1)+"/"+_lbI.length;}
+function lbFromSlider(uid,idx){const el=document.getElementById(uid);if(!el)return;const imgs=JSON.parse(el.dataset.imgs||"[]");openLb(imgs,idx);}
+document.addEventListener("keydown",e=>{if(!document.getElementById("lightbox").classList.contains("open"))return;if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft")lbNav(-1);if(e.key==="ArrowRight")lbNav(1);});
+// ライトボックス スワイプ（スマホ）
+(()=>{let tx=0;const lb=document.getElementById("lightbox");lb.addEventListener("touchstart",e=>{tx=e.changedTouches[0].clientX;},{passive:true});lb.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>40)lbNav(dx<0?1:-1);},{passive:true});})();
+
+// ── スライダー タッチスワイプ & タップでライトボックス ──
+function initSwipes(){
+  document.querySelectorAll(".img-slider:not([data-sw])").forEach(el=>{
+    el.dataset.sw="1";
+    let tx=0, ty=0;
+    el.addEventListener("touchstart",e=>{tx=e.changedTouches[0].clientX;ty=e.changedTouches[0].clientY;},{passive:true});
+    el.addEventListener("touchend",e=>{
+      const dx=e.changedTouches[0].clientX-tx;
+      const dy=e.changedTouches[0].clientY-ty;
+      if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){
+        slide(el.id,dx<0?1:-1);
+      } else if(Math.abs(dx)<10&&Math.abs(dy)<10){
+        // タップ → ライトボックスを開く
+        const cur=parseInt(el.dataset.idx||0);
+        lbFromSlider(el.id,cur);
+      }
+    },{passive:true});
+  });
+}
+// カード単体画像のタップでライトボックス
+document.addEventListener("touchend",function(e){
+  const img=e.target;
+  if(img.tagName==="IMG"&&img.closest(".card-img")&&!img.closest(".img-slider")){
+    const t=e.changedTouches[0];
+    if(Math.abs(t.clientX-(img._tx||t.clientX))<10)openLb([img.src],0);
+  }
+  if(img.tagName==="IMG"&&img.closest(".card-img"))img._tx=undefined;
+},{passive:true});
+document.addEventListener("touchstart",function(e){
+  const img=e.target;
+  if(img.tagName==="IMG")img._tx=e.changedTouches[0].clientX;
+},{passive:true});
+
+// ── カレンダー ──────────────────────────────
+let _calHist=null, _calY=0, _calM=0;
+const _isReport = location.pathname.includes('/reports/');
+
+function _calBasePath(){ return _isReport ? '' : 'reports/'; }
+
+function openCal(){
+  const now=new Date();
+  _calY=now.getFullYear(); _calM=now.getMonth();
+  if(_calHist){ _renderCal(); document.getElementById('calOverlay').classList.add('open'); return; }
+  const histPath = _isReport ? 'history.json?v='+Date.now() : 'reports/history.json?v='+Date.now();
+  fetch(histPath).then(r=>r.json()).then(h=>{
+    _calHist=h; _renderCal();
+    document.getElementById('calOverlay').classList.add('open');
+  }).catch(()=>{ _calHist={}; _renderCal(); document.getElementById('calOverlay').classList.add('open'); });
+}
+function closeCal(){ document.getElementById('calOverlay').classList.remove('open'); }
+function calNav(d){ _calM+=d; if(_calM<0){_calM=11;_calY--;} if(_calM>11){_calM=0;_calY++;} _renderCal(); }
+
+function _renderCal(){
+  const DOWS=['日','月','火','水','木','金','土'];
+  document.getElementById('calTitle').textContent=_calY+'年'+(_calM+1)+'月';
+  const grid=document.getElementById('calGrid');
+  let html=DOWS.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+  const first=new Date(_calY,_calM,1);
+  const lastDay=new Date(_calY,_calM+1,0).getDate();
+  const todayStr=new Date().toISOString().slice(0,10);
+  for(let i=0;i<first.getDay();i++) html+='<div class="cal-day"></div>';
+  for(let d=1;d<=lastDay;d++){
+    const ds=_calY+'-'+String(_calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const info=_calHist[ds];
+    const has=!!info;
+    const isToday=ds===todayStr;
+    const cnt=info?info.total:0;
+    const ranked=info?info.ranked:0;
+    const cls='cal-day'+(has?' has-data':'')+(isToday?' today':'');
+    if(has){
+      const href=_isReport?ds+'.html':('reports/'+ds+'.html');
+      html+='<a class="'+cls+'" href="'+href+'" style="text-decoration:none;color:inherit">'+d+'<span class="cal-count">'+cnt+'件</span></a>';
+    } else {
+      html+='<div class="'+cls+'">'+d+'</div>';
+    }
+  }
+  grid.innerHTML=html;
+}
+
+// ── フローティング日付 ──────────────────────
+(function(){
+  const fd=document.getElementById('floatingDate');
+  const header=document.querySelector('.header');
+  if(!fd||!header) return;
+  let ticking=false;
+  window.addEventListener('scroll',function(){
+    if(!ticking){ requestAnimationFrame(function(){
+      fd.classList.toggle('show', window.scrollY > header.offsetHeight);
+      ticking=false;
+    }); ticking=true; }
+  },{passive:true});
+})();
+
+renderAll();
+initSwipes();
+/* reports/*.html 専用: 今日基準の7日チップをJSで動的生成 */
+
+(function(){{
+  const container = document.getElementById('dynChips');
+  if (!container) return;
+  const DAYS = ['日','月','火','水','木','金','土'];
+  // 現在ページの日付を取得（例: "2026-03-25"）
+  const currentDate = location.pathname.split('/').pop().replace('.html','');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  function buildChips(hist) {{
+    container.innerHTML = '';
+    for (let i = 0; i < 7; i++) {{
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const dateStr = y+'-'+m+'-'+day;
+      const label = (d.getMonth()+1)+'/'+d.getDate()+'（'+DAYS[d.getDay()]+'）';
+      const isActive = dateStr === currentDate;
+      // 今日(i===0)は index.html へ、それ以外は同フォルダ内の .html へ
+      const href = i === 0 ? '../index.html' : dateStr+'.html';
+      const info = hist ? hist[dateStr] : null;
+      const count = info && info.total > 0 ? info.total : 0;
+      const txt = count > 0 ? count+'件' : '—';
+      const zero = count === 0 ? ' zero' : '';
+      const a = document.createElement('a');
+      a.className = 'day-chip' + (isActive ? ' active' : '');
+      a.href = href;
+      a.innerHTML = '<div class="day-chip-date">'+label+'</div>'
+                  + '<div class="day-chip-count'+zero+'">'+txt+'</div>';
+      container.appendChild(a);
+    }}
+    // 「過去」ボタンを追加
+    var pastBtn = document.createElement('button');
+    pastBtn.className = 'past-btn';
+    pastBtn.textContent = '過去 ▼';
+    pastBtn.onclick = function(){{ openCal(); }};
+    container.appendChild(pastBtn);
+  }}
+
+  // まず件数なしで即時描画
+  buildChips(null);
+  // history.json から件数を非同期取得して更新
+  fetch('history.json?v='+Date.now())
+    .then(function(r){{ return r.json(); }})
+    .then(function(hist){{ buildChips(hist); }})
+    .catch(function(){{}});
+}})();
+
+</script>
+</body>
+</html>
