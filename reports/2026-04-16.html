@@ -143,7 +143,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 <div class="header">
   <div>
     <div class="header-title">収益物件レポート</div>
-    <div class="header-date"><a class="date-nav" href="2026-04-15.html" title="前日">&#8249;</a>2026年4月16日（木）<span class="date-nav disabled">&#8250;</span></div>
+    <div class="header-date"><a class="date-nav" href="2026-04-15.html" title="前日">&#8249;</a>2026年4月16日（木）<a class="date-nav" href="2026-04-17.html" title="翌日">&#8250;</a></div>
   </div>
   <div class="header-stats">
     <div class="stat"><div class="stat-num">82</div><div class="stat-label">表示件数</div></div>
@@ -174,7 +174,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
   <button class="filter-btn rank-filter" onclick="filterRank('b',this)">B</button>
   <button class="filter-btn rank-filter" onclick="filterRank('ng',this)">NG含む</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
-  <button class="filter-btn new-filter" onclick="toggleNew(this)" style="border-color:#e74c3c;color:#e74c3c">新着のみ</button>
+  <button class="filter-btn new-filter active" onclick="toggleNew(this)" style="border-color:#e74c3c;background:#e74c3c;color:white">新着のみ</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
   <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap"><span class="filter-label" style="margin:0">サイト</span>
   <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
@@ -307,7 +307,7 @@ function buildCard(p){
 
 let _activeRank="all";
 let _activeSite="all";
-let _newOnly=false;
+let _newOnly=true;
 
 function _applyFilters(){
   document.querySelectorAll(".card").forEach(card=>{
@@ -343,7 +343,7 @@ function renderAll(){
   container.innerHTML=sites.map(s=>
     `<button class="filter-btn site-filter" onclick="filterSite('${s.replace(/'/g,"\'")}',null,this)">${esc(SHORT_SITE[s]||s)}</button>`
   ).join("");
-  updateCount();
+  _applyFilters();
 }
 
 function filterRank(f,btn){
@@ -539,7 +539,8 @@ initSwipes();
       // 今日(i===0)は index.html へ、それ以外は同フォルダ内の .html へ
       const href = i === 0 ? '../index.html' : dateStr+'.html';
       const info = hist ? hist[dateStr] : null;
-      const count = info && info.total > 0 ? info.total : 0;
+      // 表示件数(display)を優先、未保存なら収集件数(total)にフォールバック
+      const count = info ? (info.display != null ? info.display : (info.total || 0)) : 0;
       const txt = count > 0 ? count+'件' : '—';
       const zero = count === 0 ? ' zero' : '';
       const a = document.createElement('a');
