@@ -554,7 +554,9 @@ initSwipes();
   const DAYS = ['日','月','火','水','木','金','土'];
   // 現在ページの日付を取得（例: "2026-03-25"）
   const currentDate = location.pathname.split('/').pop().replace('.html','');
+
   // チップの起点: history.jsonの最新日付を採用（実日付ではなく最後にスクレイプした日）
+  // hist未取得時は実日付をフォールバック
   function getAnchorDate(hist) {{
     if (hist) {{
       const dates = Object.keys(hist).sort();
@@ -586,8 +588,8 @@ initSwipes();
       // 今日(i===0)は index.html へ、それ以外は同フォルダ内の .html へ
       const href = i === 0 ? '../index.html' : dateStr+'.html';
       const info = hist ? hist[dateStr] : null;
-      // 表示件数(display)を優先、未保存なら収集件数(total)にフォールバック
-      const count = info ? (info.display != null ? info.display : (info.total || 0)) : 0;
+      // 新着件数(new)を表示。未保存なら表示件数→収集件数の順にフォールバック
+      const count = info ? (info.new != null ? info.new : (info.display != null ? info.display : (info.total || 0))) : 0;
       const txt = count > 0 ? count+'件' : '—';
       const zero = count === 0 ? ' zero' : '';
       const a = document.createElement('a');

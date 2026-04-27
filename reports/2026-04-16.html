@@ -578,7 +578,7 @@ initSwipes();
       const href = i === 0 ? '../index.html' : dateStr+'.html';
       const info = hist ? hist[dateStr] : null;
       // 表示件数(display)を優先、未保存なら収集件数(total)にフォールバック
-      const count = info ? (info.display != null ? info.display : (info.total || 0)) : 0;
+      const count = info ? (info.new != null ? info.new : (info.display != null ? info.display : (info.total || 0))) : 0;
       const txt = count > 0 ? count+'件' : '—';
       const zero = count === 0 ? ' zero' : '';
       const a = document.createElement('a');
