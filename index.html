@@ -303,7 +303,7 @@ function buildCard(p){
     ? imgHtml.replace('</div>', overlayInner+'</div>')
     : imgHtml;
 
-  return `<div class="card" data-rank="${esc(p.rank)}" data-site="${esc(p.site)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}" data-new="${p.is_new?'true':'false'}" data-basement="${p.has_basement?'true':'false'}" data-pricechange="${p.price_change_type||''}"
+  return `<div class="card" data-rank="${esc(p.rank)}" data-site="${esc(p.site)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}" data-new="${p.is_new?'true':'false'}" data-basement="${p.has_basement?'true':'false'}" data-pricechange="${p.price_change_type||''}">
   ${wrapOpen}
     ${finalImgHtml}
     ${(p.imgs&&p.imgs.length<=1)?overlayInner:""}

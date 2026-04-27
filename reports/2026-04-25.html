@@ -274,15 +274,30 @@ function buildCard(p){
 
   const wrapOpen = (p.imgs&&p.imgs.length>1) ? `` : `<div class="card-img">`;
   const wrapClose = (p.imgs&&p.imgs.length>1) ? `` : `</div>`;
-  const newTag = p.is_new ? '<span class="new-tag">NEW</span>' : '';
+  const days = (p.days_since_first_seen != null) ? p.days_since_first_seen : null;
+  let dayTag = '';
+  if (p.is_new) {
+    if (days != null && days >= 1 && days <= 7) {
+      dayTag = `<span class="days-tag">${days+1}日目</span>`;
+    } else {
+      dayTag = '<span class="new-tag">NEW</span>';
+    }
+  }
+  const newTag = dayTag;
+  let priceChangeTag = '';
+  if (p.price_change_type === 'down' && p.price_change_diff != null) {
+    priceChangeTag = `<span class="price-down-tag">値下げ ${p.price_change_diff}万</span>`;
+  } else if (p.price_change_type === 'up' && p.price_change_diff != null) {
+    priceChangeTag = `<span class="price-up-tag">値上げ +${p.price_change_diff}万</span>`;
+  }
   const hatazaoTag = p.is_hatazao ? '<span class="hatazao-tag">旗竿地</span>' : '';
-  const overlayInner = `<span class="rank-tag ${rc}">${p.rank==="A+"?"★":""}${esc(p.rank)}</span>${p.has_basement?'<span class="basement-tag">半地下あり</span>':""}${newTag}${hatazaoTag}`;
+  const overlayInner = `<span class="rank-tag ${rc}">${p.rank==="A+"?"★":""}${esc(p.rank)}</span>${p.has_basement?'<span class="basement-tag">半地下あり</span>':""}${newTag}${priceChangeTag}${hatazaoTag}`;
   // スライダーの場合はimg-sliderの中にオーバーレイを注入
   const finalImgHtml = (p.imgs&&p.imgs.length>1)
     ? imgHtml.replace('</div>', overlayInner+'</div>')
     : imgHtml;
 
-  return `<div class="card" data-rank="${esc(p.rank)}" data-site="${esc(p.site)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}" data-new="${p.is_new?'true':'false'}" data-basement="${p.has_basement?'true':'false'}">
+  return `<div class="card" data-rank="${esc(p.rank)}" data-site="${esc(p.site)}" data-yield="${p.best_yield}" data-price="${p.price_man}" data-area="${p.area_sqm||0}" data-far="${p.effective_far||p.floor_area_ratio||0}" data-new="${p.is_new?'true':'false'}" data-basement="${p.has_basement?'true':'false'}" data-pricechange="${p.price_change_type||''}">
   ${wrapOpen}
     ${finalImgHtml}
     ${(p.imgs&&p.imgs.length<=1)?overlayInner:""}
