@@ -554,14 +554,29 @@ initSwipes();
   const DAYS = ['日','月','火','水','木','金','土'];
   // 現在ページの日付を取得（例: "2026-03-25"）
   const currentDate = location.pathname.split('/').pop().replace('.html','');
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  // チップの起点: history.jsonの最新日付を採用（実日付ではなく最後にスクレイプした日）
+  function getAnchorDate(hist) {{
+    if (hist) {{
+      const dates = Object.keys(hist).sort();
+      if (dates.length > 0) {{
+        const last = dates[dates.length - 1];
+        const parts = last.split('-');
+        const a = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+        a.setHours(0,0,0,0);
+        return a;
+      }}
+    }}
+    const t = new Date();
+    t.setHours(0,0,0,0);
+    return t;
+  }}
 
   function buildChips(hist) {{
     container.innerHTML = '';
+    const anchor = getAnchorDate(hist);
     for (let i = 0; i < 7; i++) {{
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
+      const d = new Date(anchor);
+      d.setDate(anchor.getDate() - i);
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
       const day = String(d.getDate()).padStart(2,'0');
@@ -590,13 +605,11 @@ initSwipes();
     container.appendChild(pastBtn);
   }}
 
-  // まず件数なしで即時描画
-  buildChips(null);
-  // history.json から件数を非同期取得して更新
+  // history.jsonを先に取得してアンカー日付（最新スクレイプ日）を確定してから描画
   fetch('history.json?v='+Date.now())
     .then(function(r){{ return r.json(); }})
     .then(function(hist){{ buildChips(hist); }})
-    .catch(function(){{}});
+    .catch(function(){{ buildChips(null); }});
 }})();
 
 </script>
