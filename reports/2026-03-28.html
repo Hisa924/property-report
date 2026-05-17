@@ -271,14 +271,9 @@ function buildCard(p){
 
   const wrapOpen = (p.imgs&&p.imgs.length>1) ? `` : `<div class="card-img">`;
   const wrapClose = (p.imgs&&p.imgs.length>1) ? `` : `</div>`;
-  const days = (p.days_since_first_seen != null) ? p.days_since_first_seen : null;
   let dayTag = '';
   if (p.is_new) {
-    if (days != null && days >= 1 && days <= 7) {
-      dayTag = `<span class="days-tag">${days+1}日目</span>`;
-    } else {
-      dayTag = '<span class="new-tag">NEW</span>';
-    }
+    dayTag = '<span class="new-tag">NEW</span>';
   }
   const newTag = dayTag;
   let priceChangeTag = '';
