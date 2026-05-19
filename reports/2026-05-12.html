@@ -20,7 +20,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 .stat-num{font-size:28px;font-weight:700;color:#4fc3f7}
 .stat-label{font-size:11px;opacity:.6;margin-top:2px}
 .site-breakdown{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;justify-content:center}
-.site-chip{padding:4px 12px;border-radius:16px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15)}
+.site-chip{padding:4px 12px;border-radius:16px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);text-decoration:none;display:inline-block;transition:background .15s,border-color .15s,transform .15s;cursor:pointer}
+a.site-chip:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35);transform:translateY(-1px)}
+a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
+
 .rank-summary{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
 .rank-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
 .rank-badge.rank-Aplus{background:#ff6b35;color:white}
@@ -154,7 +157,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
     <div class="stat"><div class="stat-num">446</div><div class="stat-label">表示件数</div></div>
     <div class="stat"><div class="stat-num">1821</div><div class="stat-label">収集件数</div></div>
   </div>
-  <div class="site-breakdown"><span class="site-chip">アットホーム 275件</span><span class="site-chip">三井のリハウス 89件</span><span class="site-chip">住友不動産販売 43件</span><span class="site-chip">ノムコム 39件</span></div>
+  <div class="site-breakdown"><a class="site-chip" href="https://www.athome.co.jp/tochi/tokyo/list/?pref=13&cities=chiyoda,chuo,minato,shinjuku,bunkyo,taito,sumida,koto,shinagawa,meguro,ota,setagaya,shibuya,nakano,suginami,toshima,kita,arakawa,itabashi,nerima,adachi,katsushika,edogawa&basic=kp001,kp120,kp299,kf004,ke005,kj002&kod=C15,ko001&q=1" target="_blank" rel="noopener" title="アットホームの本日新着・23区・徒歩15分・60㎡以上の物件一覧を開く">アットホーム 275件</a><a class="site-chip" href="https://www.rehouse.co.jp/buy/tochi/prefecture/13/city/13101/?cityCode=13102,13103,13104,13105,13106,13107,13108,13109,13110,13111,13112,13113,13114,13115,13116,13117,13118,13119,13120,13121,13122,13123&minLandArea=60&maxAccessMinutes=15&otherRequirements=1&order=firstReleaseDateDesc" target="_blank" rel="noopener" title="三井のリハウスの本日新着・23区・徒歩15分・60㎡以上の物件一覧を開く">三井のリハウス 89件</a><a class="site-chip" href="https://www.stepon.co.jp/search/list/?prefCityCd=13_101&prefCityCd=13_102&prefCityCd=13_103&prefCityCd=13_104&prefCityCd=13_105&prefCityCd=13_106&prefCityCd=13_107&prefCityCd=13_108&prefCityCd=13_109&prefCityCd=13_110&prefCityCd=13_111&prefCityCd=13_112&prefCityCd=13_113&prefCityCd=13_114&prefCityCd=13_115&prefCityCd=13_116&prefCityCd=13_117&prefCityCd=13_118&prefCityCd=13_119&prefCityCd=13_120&prefCityCd=13_121&prefCityCd=13_122&prefCityCd=13_123&tochiMensekiMin=60&tohoTime=15&tochiKenriCd=1&isShinchaku=on&searchType=area&prefCd=13&type=tochi" target="_blank" rel="noopener" title="住友不動産販売の本日新着・23区・徒歩15分・60㎡以上の物件一覧を開く">住友不動産販売 43件</a><a class="site-chip" href="https://www.nomu.com/land/SearchList/?pkg=land&type=area&area_group_cd=C&area_id%5B%5D=13101_13102_13103_13104_13105_13106_13107_13108_13109_13110_13111_13112_13113_13114_13115_13116_13117_13118_13119_13120_13121_13122_13123&iaid=13101_13102_13103_13104_13105_13106_13107_13108_13109_13110_13111_13112_13113_13114_13115_13116_13117_13118_13119_13120_13121_13122_13123&wide=13&order=0&dim_land_from=60&walk_distance=15&cond_const=2&add_condition=C1" target="_blank" rel="noopener" title="ノムコムの本日新着・23区・徒歩15分・60㎡以上の物件一覧を開く">ノムコム 39件</a></div>
   <div class="history-nav">
     <div class="history-label">過去7日間</div>
     <div class="history-days"><span id="dynChips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div>
