@@ -1,8 +1,9 @@
 {
+  "id": "/property-report/calc.html",
   "name": "N-GLOW Calculator",
   "short_name": "N-GLOW電卓",
   "start_url": "./calc.html",
-  "scope": "./",
+  "scope": "./calc.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f1420",

@@ -1,7 +1,9 @@
 {
+  "id": "/property-report/index.html",
   "name": "物件レポート",
   "short_name": "物件レポート",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
