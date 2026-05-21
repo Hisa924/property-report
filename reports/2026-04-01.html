@@ -18,7 +18,10 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',sans-serif;background:#f0f2f5;color:#1a1a2e}
 .floating-date{position:fixed;top:0;left:0;right:0;z-index:8000;background:rgba(26,26,46,.92);backdrop-filter:blur(8px);color:white;text-align:center;padding:6px 0;font-size:13px;font-weight:700;letter-spacing:.05em;transform:translateY(-100%);transition:transform .25s ease;pointer-events:none}
 .floating-date.show{transform:translateY(0)}
-.header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:white;padding:24px 32px}
+.header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:white;padding:24px 32px;position:relative}
+.search-link{position:absolute;top:20px;right:24px;display:inline-flex;align-items:center;gap:6px;background:rgba(79,195,247,.16);color:#4fc3f7;border:1px solid rgba(79,195,247,.5);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s,transform .15s}
+.search-link:hover{background:rgba(79,195,247,.3);transform:translateY(-1px)}
+@media(max-width:600px){.search-link{top:16px;right:14px;padding:6px 12px;font-size:12px}}
 .header-title{font-size:20px;font-weight:700;letter-spacing:.05em}
 .header-date{font-size:16px;font-weight:600;color:#4fc3f7;margin-top:4px;display:flex;align-items:center;gap:8px}
 .date-nav{background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.7);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s}
@@ -154,6 +157,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 </div>
 
 <div class="header">
+  <a class="search-link" href="../search.html">🔍 物件検索</a>
   <div>
     <div class="header-title">収益物件レポート</div>
     <div class="header-date"><a class="date-nav" href="2026-03-31.html" title="前日">&#8249;</a>2026年4月1日（水）<a class="date-nav" href="2026-04-02.html" title="翌日">&#8250;</a></div>
