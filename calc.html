@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>N-GLOW 電卓</title>
+<link rel="manifest" href="manifest-calc.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="N-GLOW電卓">
+<link rel="icon" type="image/png" sizes="192x192" href="calc-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="calc-apple-touch.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* 数値入力欄の上下スピナー(▲▼)を非表示 */
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+:root{--navy:#1a2a52;--navy2:#16213e;--accent:#4fc3f7;--re:#16a085;--bg:#0f1420}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',sans-serif;background:var(--bg);color:#fff;display:flex;flex-direction:column;max-width:480px;margin:0 auto;height:100dvh;overflow:hidden;user-select:none}
+/* ヘッダー */
+.head{display:flex;align-items:center;gap:9px;padding:10px 16px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);flex-shrink:0}
+.head img{width:30px;height:30px;object-fit:contain;background:#fff;border-radius:6px;padding:2px}
+.head .nm{font-family:'Times New Roman',Georgia,serif;font-size:19px;font-weight:700;letter-spacing:.09em}
+.brand-text{display:inline-flex;flex-direction:column;line-height:1.05;align-items:stretch}
+.head-sub{display:flex;justify-content:space-between;font-size:8.5px;color:rgba(255,255,255,.5);margin-top:3px}
+.head .sub{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.15em;margin-left:auto}
+.head a{color:rgba(255,255,255,.7);text-decoration:none;font-size:12px;background:rgba(255,255,255,.1);padding:5px 11px;border-radius:14px;border:1px solid rgba(255,255,255,.2)}
+/* シート戻る/シート名（ブランドヘッダーの下段） */
+.subhead{display:flex;align-items:center;gap:10px;padding:7px 16px;background:#11192b;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.head-back{background:rgba(255,255,255,.1);color:var(--accent);border:1px solid rgba(79,195,247,.4);border-radius:14px;padding:5px 13px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
+.head-back:active{background:rgba(79,195,247,.2)}
+.cur-sheet{font-family:inherit;font-size:15px;font-weight:700;color:rgba(255,255,255,.92);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* シート一覧画面（全面オーバーレイ） */
+.sheet-screen{position:fixed;inset:0;max-width:480px;margin:0 auto;background:#0f1420;z-index:300;display:none;flex-direction:column}
+.sheet-screen.open{display:flex}
+.ss-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);flex-shrink:0}
+.ss-gear,.ss-add{background:none;border:none;color:var(--accent);font-size:24px;cursor:pointer;line-height:1;padding:2px 6px}
+.ss-title{font-size:17px;font-weight:700;color:#fff}
+.ss-list{flex:1;overflow-y:auto}
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer;background:#0f1420}
+.ss-row:active{background:#161d2e}
+.ss-name{font-size:16px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.ss-untitled{color:rgba(255,255,255,.4);font-weight:400}
+.ss-meta{flex-shrink:0;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.45);font-size:14px}
+.ss-chev{color:rgba(255,255,255,.35);font-size:18px}
+.ss-active .ss-name{color:var(--accent)}
+/* テープ */
+.tape{flex:1;overflow-y:auto;padding:4px 0;display:flex;flex-direction:column;justify-content:flex-end;min-height:90px}
+.tape-line{font-size:17px;color:rgba(255,255,255,.62);text-align:left;padding:11px 18px;cursor:pointer;line-height:1.45;word-break:break-all;border-bottom:1px solid rgba(255,255,255,.09)}
+.tape-line:first-child{border-top:1px solid rgba(255,255,255,.09)}
+.tape-line:active{background:rgba(79,195,247,.12)}
+.tape-line .res{color:#fff;font-weight:700;font-size:20px}
+.tape-line .tag{display:inline-block;font-size:10px;background:var(--re);color:#fff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:middle}
+.tnum{cursor:pointer;border-radius:3px;padding:0 2px;border-bottom:1px dashed rgba(79,195,247,.45)}
+.tnum:active{background:rgba(79,195,247,.3);color:#fff}
+.ref{color:#7cd6f7;font-weight:600}
+.name-chip{display:inline-block;font-size:11px;background:#234a72;color:#cfe9ff;border-radius:4px;padding:1px 7px;margin-right:6px;vertical-align:middle;cursor:pointer;font-weight:700}
+/* 現行の入力行 */
+.tape-line.current{border-bottom:1px solid rgba(79,195,247,.4);background:rgba(79,195,247,.06)}
+.tape-line.current .line-main{color:#fff;font-weight:600;font-size:24px}
+.cur-ph{opacity:.3}
+.cur-eq{color:rgba(255,255,255,.3);font-weight:400;margin:0 3px}
+.cur-prev{color:rgba(255,255,255,.45);font-weight:600}
+.tape-line.blank{min-height:30px;border-bottom:none;cursor:pointer}
+.tape-line.blank:active{background:rgba(79,195,247,.08)}
+.tape-empty2{padding:11px 18px;color:rgba(255,255,255,.32);font-size:13px}
+.tape-empty{color:rgba(255,255,255,.25);font-size:12px;text-align:center;margin:auto}
+/* 不動産ツールバー */
+.re-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding:4px 10px 8px;flex-shrink:0}
+.re-btn{background:#123a52;color:#7cd6f7;border:1px solid rgba(79,195,247,.45);border-radius:10px;padding:11px 1px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .1s}
+.re-btn:active{filter:brightness(1.4)}
+/* キーパッド */
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 12px calc(12px + env(safe-area-inset-bottom));flex-shrink:0}
+.key{border:none;border-radius:14px;font-size:24px;font-weight:500;padding:16px 0;cursor:pointer;color:#fff;background:#252c3d;transition:filter .1s}
+.key:active{filter:brightness(1.4)}
+.key.fn{background:#39414f;color:var(--accent);font-size:20px;font-weight:600}
+.key.op{background:var(--navy);color:var(--accent);font-size:26px}
+.key.eq{background:var(--accent);color:#06121f;font-weight:700}
+.key.zero{grid-column:span 1}
+#sumtoggle{display:flex;align-items:center;justify-content:center}
+#sumtoggle svg{display:block}
+/* モーダル */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.sheet{background:#1a2030;border:1px solid #2c3550;border-radius:18px;width:100%;max-width:360px;padding:20px;color:#fff}
+.sheet h3{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sheet h3 .x{margin-left:auto;font-size:22px;color:#888;cursor:pointer;line-height:1}
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px}
+.fld input{width:100%;padding:11px 12px;background:#0f1420;border:1px solid #2c3550;border-radius:10px;color:#fff;font-size:18px;text-align:right}
+.fld .unit{font-size:12px;color:rgba(255,255,255,.5);margin-left:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{background:#0f1420;border:1px solid #2c3550;border-radius:14px;padding:5px 12px;font-size:13px;cursor:pointer}
+.chip:active{background:#2c3550}
+.result-box{background:#0f1420;border-radius:12px;padding:14px;text-align:center;margin:14px 0}
+.result-box .v{font-size:30px;font-weight:700;color:var(--re)}
+.result-box .l{font-size:11px;color:rgba(255,255,255,.5)}
+.sheet .send{width:100%;padding:13px;background:var(--accent);color:#06121f;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.sub-btn{width:100%;padding:11px;background:#1c2333;color:#cfe9ff;border:1px solid #2c3550;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.sub-btn:active{background:#2c3550}
+.seg{display:flex;background:#0f1420;border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;padding:9px;border:none;background:none;color:rgba(255,255,255,.6);border-radius:8px;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--accent);color:#06121f;font-weight:700}
+/* 設定ギア */
+.head-set{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:2px 6px}
+/* テープ各行のアクション */
+.tape-line{display:flex;align-items:flex-start;gap:8px}
+.line-main{flex:1;min-width:0}
+.line-acts{flex-shrink:0;display:flex;gap:2px;opacity:.55}
+.line-act{background:none;border:none;color:rgba(255,255,255,.7);font-size:15px;cursor:pointer;padding:2px 5px;border-radius:5px;line-height:1}
+.line-act:active{background:rgba(255,255,255,.15)}
+/* 集計バー（参考アプリ風: 合計 90 › ） */
+.sum-bar{display:flex;flex-direction:column;background:#141a28;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.sum-body{display:flex;flex-direction:column}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:11px 18px;font-size:15px;color:rgba(255,255,255,.62);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06)}
+.sum-row:last-child{border-bottom:none}
+.sum-row:active{background:rgba(79,195,247,.08)}
+.sum-row .sv{font-weight:700;color:#fff;font-size:17px;display:flex;align-items:center;gap:8px}
+.sum-row.main .sv{color:var(--accent)}
+.sum-row .cv{color:var(--accent);font-size:18px;font-weight:400}
+.sum-row.act{cursor:default}
+.sum-row.act:active{background:none}
+.sum-row .lnk{font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;padding:2px 4px}
+.sum-row .lnk:active{color:#fff}
+/* トースト */
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:rgba(20,30,50,.96);border:1px solid #2c3550;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="head">
+  <img src="logo-mark.png" alt="N-GLOW">
+  <div class="brand-text">
+    <span class="nm">N-GLOW</span>
+    <span class="head-sub"><span>C</span><span>A</span><span>L</span><span>C</span><span>U</span><span>L</span><span>A</span><span>T</span><span>O</span><span>R</span></span>
+  </div>
+  <button class="head-set" onclick="pasteClip()" title="貼り付け" style="margin-left:auto">📋</button>
+  <button class="head-set" onclick="openModal('m-set')" title="設定">⚙</button>
+</div>
+
+<div class="subhead">
+  <button class="head-back" onclick="openSheetList()" title="シート一覧">‹ シート一覧</button>
+  <span class="cur-sheet" id="cur-sheet-name" onclick="renameSheet()" title="タップでシート名変更">無題</span>
+</div>
+
+<div class="tape" id="tape"></div>
+
+<div class="sum-bar" id="sumbar" style="display:none">
+  <div class="sum-body" id="sumbody"></div>
+</div>
+
+<div class="re-bar">
+  <button class="re-btn" onclick="openYield()">利回り</button>
+  <button class="re-btn" onclick="conv(3.305785)">坪→㎡</button>
+  <button class="re-btn" onclick="conv(1/3.305785)">㎡→坪</button>
+  <button class="re-btn" id="btn-taxin" onclick="taxIncl()">税込</button>
+  <button class="re-btn" id="btn-taxex" onclick="taxExcl()">税抜</button>
+  <button class="re-btn" onclick="openDiscount()">値引き</button>
+</div>
+
+<div class="pad">
+  <button class="key fn" onclick="allClear()">AC</button>
+  <button class="key fn" onclick="paren()">( )</button>
+  <button class="key fn" id="sumtoggle" onclick="toggleSum()" title="集計"><svg width="26" height="17" viewBox="0 0 26 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 7 13 3 20 7"/><line x1="5" y1="13" x2="21" y2="13"/></svg></button>
+  <button class="key fn" onclick="backspace()">⌫</button>
+
+  <button class="key" onclick="num('7')">7</button>
+  <button class="key" onclick="num('8')">8</button>
+  <button class="key" onclick="num('9')">9</button>
+  <button class="key op" onclick="setOp('/')">÷</button>
+
+  <button class="key" onclick="num('4')">4</button>
+  <button class="key" onclick="num('5')">5</button>
+  <button class="key" onclick="num('6')">6</button>
+  <button class="key op" onclick="setOp('*')">×</button>
+
+  <button class="key" onclick="num('1')">1</button>
+  <button class="key" onclick="num('2')">2</button>
+  <button class="key" onclick="num('3')">3</button>
+  <button class="key op" onclick="setOp('-')">−</button>
+
+  <button class="key fn" onclick="negate()">±</button>
+  <button class="key" onclick="num('0')">0</button>
+  <button class="key" onclick="dot()">.</button>
+  <button class="key op" onclick="setOp('+')">+</button>
+
+  <button class="key fn" onclick="percent()">%</button>
+  <button class="key eq" style="grid-column:span 3" onclick="equals()">=</button>
+</div>
+
+<!-- 利回りモーダル -->
+<div class="modal" id="m-yield">
+  <div class="sheet">
+    <h3>表面利回り計算<span class="x" onclick="closeModal('m-yield')">&times;</span></h3>
+    <div class="fld"><label>物件価格（万円）</label><input type="number" id="y-price" inputmode="decimal" oninput="calcYield()"></div>
+    <div class="fld"><label>年間家賃収入（万円）</label><input type="number" id="y-rent" inputmode="decimal" oninput="calcYield()">
+      <div class="chips" id="y-rent-chips"></div>
+    </div>
+    <div class="result-box"><div class="v" id="y-out">--</div><div class="l">表面利回り（年間家賃 ÷ 価格）</div></div>
+    <button class="send" onclick="sendYield()">この数値を電卓へ</button>
+  </div>
+</div>
+
+<!-- 値引きモーダル -->
+<div class="modal" id="m-disc">
+  <div class="sheet">
+    <h3>値引き計算<span class="x" onclick="closeModal('m-disc')">&times;</span></h3>
+    <div class="fld"><label>元の金額</label><input type="number" id="d-base" inputmode="decimal" oninput="calcDisc()"></div>
+    <div class="fld"><label>値引き率（％）</label><input type="number" id="d-pct" inputmode="decimal" oninput="calcDisc()">
+      <div class="chips">
+        <span class="chip" onclick="setDisc(3)">3%</span><span class="chip" onclick="setDisc(5)">5%</span>
+        <span class="chip" onclick="setDisc(10)">10%</span><span class="chip" onclick="setDisc(15)">15%</span>
+        <span class="chip" onclick="setDisc(20)">20%</span>
+      </div>
+    </div>
+    <div class="result-box"><div class="v" id="d-out">--</div><div class="l" id="d-lbl">値引き後の金額</div></div>
+    <button class="send" onclick="sendDisc()">この数値を電卓へ</button>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div class="modal" id="m-set">
+  <div class="sheet">
+    <h3>設定<span class="x" onclick="closeModal('m-set')">&times;</span></h3>
+    <div class="fld"><label>消費税率（％）</label><input type="number" id="s-tax" inputmode="decimal" step="0.1"></div>
+    <div class="fld"><label>小数点以下の表示桁数</label>
+      <select id="s-dec" style="width:100%;padding:11px 12px;background:#0f1420;border:1px solid #2c3550;border-radius:10px;color:#fff;font-size:16px">
+        <option value="auto">自動</option>
+        <option value="0">0桁</option><option value="1">1桁</option><option value="2">2桁</option>
+        <option value="3">3桁</option><option value="4">4桁</option><option value="6">6桁</option>
+      </select>
+    </div>
+    <div class="fld" style="display:flex;align-items:center;justify-content:space-between">
+      <label style="margin:0">全消去（AC・履歴）の前に確認</label>
+      <input type="checkbox" id="s-confirm" style="width:22px;height:22px">
+    </div>
+    <button class="send" onclick="saveSettings()">保存</button>
+    <div style="border-top:1px solid #2c3550;margin:16px 0 12px"></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:8px">バックアップ（端末のファイルに保存。ブラウザのデータ削除でも消えません）</div>
+    <button class="sub-btn" onclick="exportBackup()">⬇ バックアップを書き出す</button>
+    <button class="sub-btn" onclick="document.getElementById('restore-file').click()">⬆ バックアップから復元</button>
+    <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="importBackup(this.files[0])">
+    <div id="persist-note" style="font-size:11px;color:rgba(255,255,255,.4);margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- シート一覧画面 -->
+<div class="sheet-screen" id="sheet-screen">
+  <div class="ss-head">
+    <button class="ss-gear" onclick="openModal('m-set')" title="設定">⚙</button>
+    <span class="ss-title">シート</span>
+    <button class="ss-add" onclick="newSheet()" title="新規シート">＋</button>
+  </div>
+  <div class="ss-list" id="ss-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 電卓エンジン（式評価型 / カッコ・優先順位・参照対応） ──
+let expr = '';        // 構築中の式（数値/演算子/カッコ/参照 #id）
+let editingId = null; // 編集中の履歴エントリid（in-place編集）
+let _map = {};        // id -> entry（参照解決用キャッシュ）
+const TAPE_KEY = 'nglow_calc_tape_v1';
+const SET_KEY  = 'nglow_calc_set_v1';
+
+// 設定
+let SET = {tax:10, decimals:'auto', confirmAC:true};
+try{ Object.assign(SET, JSON.parse(localStorage.getItem(SET_KEY))||{}); }catch(e){}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function newId(){ return 'r'+Math.random().toString(36).slice(2,8); }
+function _resolveRef(id){ const e=_map[id]; if(!e||isNaN(e.res)) throw new Error('ref'); return e.res; }
+
+const fmt = n => {
+  if(n===''||n==null||isNaN(n)) return n;
+  n = +n;
+  if(SET.decimals!=='auto'){ n = parseFloat(n.toFixed(parseInt(SET.decimals))); }
+  const neg = n<0; n=Math.abs(n);
+  let [i,d] = String(n).split('.');
+  i = i.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return (neg?'-':'')+(d!=null?i+'.'+d:i);
+};
+
+// 式を表示用に整形（参照#idは〔名前〕or値に、演算子記号、桁区切り）
+function fmtExpr(s){
+  s = String(s==null ? '' : s);
+  const refs=[];
+  s = s.replace(/#([a-z0-9]+)/ig,(m,id)=>{
+    const e=_map[id];
+    const label = !e ? '?' : (e.name ? esc(e.name) : fmt(e.res));
+    const idx = refs.push(`<span class="ref">${label}</span>`)-1;
+    return String.fromCharCode(0xE000+idx);   // 数値整形を逃れるプレースホルダ
+  });
+  s = s.replace(/\d+\.?\d*/g, m=>fmt(m)).replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−');
+  s = s.replace(/[-]/g, ch=>refs[ch.charCodeAt(0)-0xE000]||'');
+  return s;
+}
+
+// ── 安全な式評価（再帰下降パーサ / 参照 #id 対応） ──
+function evaluate(s, resolve){
+  let p=0;
+  const toks=[];
+  for(let i=0;i<s.length;){
+    const c=s[i];
+    if(/\s/.test(c)){ i++; continue; }
+    if(c==='#'){ let j=i+1; while(j<s.length && /[a-z0-9]/i.test(s[j])) j++; const id=s.slice(i+1,j); const v=resolve?resolve(id):NaN; toks.push({t:'n',v}); i=j; continue; }
+    if(/[0-9.]/.test(c)){ let j=i; while(j<s.length && /[0-9.]/.test(s[j])) j++; toks.push({t:'n',v:parseFloat(s.slice(i,j))}); i=j; }
+    else if('+-*/()'.includes(c)){ toks.push({t:c}); i++; }
+    else throw new Error('bad char');
+  }
+  const peek=()=>toks[p];
+  function expr_(){ let v=term(); while(peek()&&(peek().t==='+'||peek().t==='-')){ const o=toks[p++].t; const r=term(); v = o==='+'?v+r:v-r; } return v; }
+  function term(){ let v=fac(); while(peek()&&(peek().t==='*'||peek().t==='/')){ const o=toks[p++].t; const r=fac(); v = o==='*'?v*r:(r===0?NaN:v/r); } return v; }
+  function fac(){ const tk=peek(); if(!tk) throw new Error('eof');
+    if(tk.t==='n'){ p++; return tk.v; }
+    if(tk.t==='('){ p++; const v=expr_(); if(!peek()||peek().t!==')') throw new Error(')'); p++; return v; }
+    if(tk.t==='-'){ p++; return -fac(); }
+    if(tk.t==='+'){ p++; return fac(); }
+    throw new Error('unexpected'); }
+  const v=expr_();
+  if(p!==toks.length) throw new Error('trailing');
+  return Math.round(v*1e8)/1e8;
+}
+
+// 現在値（プレビュー用）: 末尾演算子・未閉じカッコを取り除いて評価
+function curVal(){
+  let s=expr.replace(/[+\-*/]+$/,'');
+  let open=(s.match(/\(/g)||[]).length, close=(s.match(/\)/g)||[]).length;
+  while(open>close){ s+=')'; close++; }
+  if(s==='') return 0;
+  try{ return evaluate(s,_resolveRef); }catch(e){ const m=expr.match(/(\d+\.?\d*)$/); return m?parseFloat(m[1]):0; }
+}
+
+function render(){
+  renderTape();
+}
+
+// ── 入力 ──
+function num(d){
+  const m = expr.match(/(\d+\.?\d*)$/);
+  if(m && m[1]==='0') expr = expr.slice(0,-1)+d;          // 先頭ゼロ防止
+  else expr += d;
+  render();
+}
+function dot(){
+  const tail = (expr.match(/(\d*\.?\d*)$/)||[''])[0];
+  if(tail.includes('.')) return;
+  if(expr===''||/[+\-*/(]$/.test(expr)) expr+='0.';
+  else expr+='.';
+  render();
+}
+function setOp(o){
+  if(expr===''){ if(o==='-'){ expr='-'; render(); } return; }   // 先頭マイナス許可
+  if(/[+\-*/]$/.test(expr)) expr = expr.slice(0,-1)+o;          // 演算子の打ち替え
+  else expr += o;
+  render();
+}
+function lparen(){
+  if(/[\d.)]$/.test(expr)) expr+='*(';                          // 数字や ) の直後は暗黙の×
+  else expr+='(';
+  render();
+}
+function rparen(){
+  const open=(expr.match(/\(/g)||[]).length, close=(expr.match(/\)/g)||[]).length;
+  if(open<=close) return;
+  if(/[+\-*/(]$/.test(expr)) return;                            // 演算子・開きカッコ直後は閉じない
+  expr+=')'; render();
+}
+function paren(){
+  // 賢い ( ) キー: 閉じられる状況なら ) を、そうでなければ ( を入れる
+  const open=(expr.match(/\(/g)||[]).length, close=(expr.match(/\)/g)||[]).length;
+  if(open>close && /[\d.)]$/.test(expr)) rparen();
+  else lparen();
+}
+function backspace(){ expr = expr.slice(0,-1); render(); }
+function allClear(){ expr=''; render(); }
+function clearEntry(){ const m=expr.match(/(\d+\.?\d*)$/); if(m) expr=expr.slice(0,m.index); else expr=''; render(); }
+function percent(){
+  const m=expr.match(/(\d+\.?\d*)$/);
+  if(!m) return;
+  const pv = Math.round(parseFloat(m[1])/100*1e8)/1e8;
+  expr = expr.slice(0, m.index) + pv;
+  render();
+}
+function negate(){
+  const m=expr.match(/(\d+\.?\d*)$/); if(!m) return;
+  const i=m.index, n=m[1], before=expr.slice(0,i);
+  if(before.endsWith('-')){
+    const b2=before.slice(0,-1);
+    if(b2===''||/[+\-*/(]$/.test(b2)){ expr=b2+n; render(); return; }   // 単項マイナス除去
+  }
+  if(before===''||/[+\-*/(]$/.test(before)){ expr=before+'-'+n; render(); return; } // 単項マイナス付与
+}
+// 空白行タップ: 現在の式を確定して次の新規行へ移る
+function nextLine(){
+  if(expr==='') return;                       // 何もなければ何もしない
+  if(/[+\-*/(#]$/.test(expr)) return;         // 未完成の式はそのまま
+  equals();                                   // 履歴に確定
+  expr=''; editingId=null; render();          // 次の新規行（空）へ
+}
+function equals(){
+  if(expr===''||/[+\-*/(]$/.test(expr)||/#$/.test(expr)) return;
+  let r; try{ r=evaluate(expr,_resolveRef); }catch(e){ return; }
+  if(isNaN(r)||!isFinite(r)) return;
+  const t = loadTape();
+  let target;
+  if(editingId){
+    target = t.find(x=>x.id===editingId);
+    if(target){ target.raw = expr; delete target.disp; }  // 式編集に変わったらdisp解除
+    editingId = null;
+  } else {
+    target = {id:newId(), raw:expr, name:'', tag:'', res:Math.round(r*1e8)/1e8};
+    t.push(target);
+  }
+  recomputeAll(t); saveTape(t); rebuildMap();
+  expr = (target && !isNaN(target.res)) ? String(target.res) : '';
+  render();
+}
+
+// 値を現在式へ取り込む（リテラル）
+function insertValue(v){
+  v=String(v);
+  if(expr===''||/[+\-*/(]$/.test(expr)) expr += v;
+  else expr = v;
+  render();
+}
+// 参照を取り込む（自動更新つき）: テープの結果タップ
+function insertRef(id){
+  const tok='#'+id;
+  if(expr===''||/[+\-*/(]$/.test(expr)) expr += tok;
+  else expr = tok;
+  render();
+}
+
+// ── シート管理（複数の履歴を切替） ──
+const SHEETS_KEY = 'nglow_calc_sheets_v1';
+let _sheets = { active:null, sheets:[] };
+function loadSheets(){ try{ return JSON.parse(localStorage.getItem(SHEETS_KEY)); }catch(e){ return null; } }
+function saveSheets(){ localStorage.setItem(SHEETS_KEY, JSON.stringify(_sheets)); }
+function activeSheet(){ return _sheets.sheets.find(s=>s.id===_sheets.active) || _sheets.sheets[0]; }
+function initSheets(){
+  let data = loadSheets();
+  if(!data || !Array.isArray(data.sheets) || !data.sheets.length){
+    let oldTape=[]; try{ oldTape=JSON.parse(localStorage.getItem(TAPE_KEY))||[]; }catch(e){}
+    const id=newId();
+    data={ active:id, sheets:[{id, name:'メイン', tape:Array.isArray(oldTape)?oldTape:[]}] };
+  }
+  if(!data.active || !data.sheets.find(s=>s.id===data.active)) data.active=data.sheets[0].id;
+  data.sheets.forEach(s=>{ if(!s.updatedAt) s.updatedAt=Date.now(); });
+  _sheets=data; saveSheets();
+}
+function updSheetHeader(){
+  const el=document.getElementById('cur-sheet-name'); if(!el) return;
+  const s=activeSheet();
+  el.innerHTML = (s && s.name) ? esc(s.name) : '<span style="color:rgba(255,255,255,.55)">無題</span>';
+}
+function fmtSheetTime(ts){
+  if(!ts) return '';
+  const d=new Date(ts), now=new Date();
+  if(d.toDateString()===now.toDateString())
+    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+function openSheetList(){ renderSheetList(); document.getElementById('sheet-screen').classList.add('open'); }
+function closeSheetList(){ document.getElementById('sheet-screen').classList.remove('open'); }
+function openSheet(id){
+  if(!_sheets.sheets.find(s=>s.id===id)) return;
+  _sheets.active=id; saveSheets();
+  editingId=null; expr=''; sumState=0;
+  rebuildMap(); updSheetHeader(); renderTape(); render();
+  closeSheetList();
+}
+function renderSheetList(){
+  const el=document.getElementById('ss-list'); if(!el) return;
+  const rows=_sheets.sheets.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  el.innerHTML = rows.map(s=>{
+    const nm = s.name ? esc(s.name) : '<span class="ss-untitled">無題</span>';
+    const active = s.id===_sheets.active ? ' ss-active' : '';
+    return `<div class="ss-row${active}" data-id="${s.id}" onclick="openSheet('${s.id}')">`
+      + `<span class="ss-name">${nm}</span>`
+      + `<span class="ss-meta">${fmtSheetTime(s.updatedAt)}<span class="ss-chev">›</span></span>`
+      + `</div>`;
+  }).join('');
+  bindSheetSwipe();
+}
+// シート行: 左スワイプで削除
+function bindSheetSwipe(){
+  document.querySelectorAll('.ss-row[data-id]').forEach(row=>{
+    let x0=null,dx=0;
+    row.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; dx=0; row.style.transition='none'; },{passive:true});
+    row.addEventListener('touchmove',e=>{ if(x0==null)return; dx=e.touches[0].clientX-x0; if(dx<0) row.style.transform='translateX('+dx+'px)'; },{passive:true});
+    row.addEventListener('touchend',()=>{ if(x0==null)return; row.style.transition='transform .15s'; row.style.transform='translateX(0)';
+      if(dx<-80){ deleteSheet(row.dataset.id); } x0=null; });
+  });
+}
+function newSheet(){
+  const id=newId();
+  _sheets.sheets.push({id, name:'', tape:[], updatedAt:Date.now()});
+  _sheets.active=id; saveSheets();
+  editingId=null; expr=''; sumState=0;
+  rebuildMap(); updSheetHeader(); renderTape(); render();
+  closeSheetList();
+  toast('新しいシートを作成しました');
+}
+function renameSheet(){
+  const s=activeSheet(); if(!s) return;
+  const nm=prompt('シート名', s.name||''); if(nm===null) return;
+  s.name=nm.trim(); s.updatedAt=Date.now(); saveSheets();
+  updSheetHeader(); if(document.getElementById('sheet-screen').classList.contains('open')) renderSheetList();
+}
+function deleteSheet(id){
+  if(_sheets.sheets.length<=1){ toast('最後のシートは削除できません'); return; }
+  const s=_sheets.sheets.find(x=>x.id===id) || activeSheet(); if(!s) return;
+  if(!confirm('シート「'+(s.name||'無題')+'」を削除しますか？')) return;
+  const wasActive = (s.id===_sheets.active);
+  _sheets.sheets=_sheets.sheets.filter(x=>x.id!==s.id);
+  if(wasActive){ _sheets.active=_sheets.sheets[0].id; editingId=null; expr=''; sumState=0; }
+  saveSheets();
+  rebuildMap(); updSheetHeader(); renderTape(); render(); renderSheetList();
+}
+
+// ── テープ（アクティブシートの履歴・永続化・参照再計算） ──
+function loadTape(){ const s=activeSheet(); return (s && Array.isArray(s.tape)) ? s.tape : []; }
+function saveTape(t){ const s=activeSheet(); if(s){ s.tape=t.slice(-120); s.updatedAt=Date.now(); saveSheets(); } }
+function rebuildMap(){ _map={}; loadTape().forEach(e=>{ if(e.id) _map[e.id]=e; }); }
+// 全エントリを依存関係に従って再計算（循環は ERR）
+function recomputeAll(entries){
+  const map={}; entries.forEach(e=>{ if(e.id) map[e.id]=e; });
+  const state={};
+  function valueOf(id){
+    const e=map[id]; if(!e) throw new Error('missing');
+    if(state[id]==='doing') throw new Error('cycle');
+    if(state[id]==='done') return e.res;
+    state[id]='doing';
+    let v; try{ v=evaluate(e.raw, valueOf); }catch(err){ v=NaN; }
+    e.res = (isNaN(v)||!isFinite(v)) ? NaN : Math.round(v*1e8)/1e8;
+    state[id]='done';
+    return e.res;
+  }
+  entries.forEach(e=>{ if(e.id && state[e.id]!=='done'){ try{ valueOf(e.id); }catch(err){ e.res=NaN; state[e.id]='done'; } } });
+}
+// 旧データ移行: 全シートに id付与・raw補完・旧ユーティリティ行のdisp復元
+function migrateTape(){
+  let changed=false;
+  _sheets.sheets.forEach(sh=>{
+    (sh.tape||[]).forEach(e=>{
+      if(!e.id){ e.id=newId(); changed=true; }
+      if(e.raw==null||e.raw===''){ e.raw=(e.res!=null?String(e.res):'0'); changed=true; }
+      if(e.res==null){ e.res=NaN; }
+      if(e.disp===undefined){
+        const rawIsNum=/^-?\d+\.?\d*$/.test(e.raw||'');
+        if(rawIsNum && e.expr!==undefined && e.expr!==String(e.res)){ e.disp=e.expr; changed=true; }
+      }
+    });
+  });
+  if(changed) saveSheets();
+}
+// ユーティリティ行（坪㎡・税・利回り・値引き）の追加
+function pushTape(disp, res, tag){
+  const t=loadTape();
+  const r=Math.round(res*1e8)/1e8;
+  t.push({id:newId(), raw:String(r), disp:disp, name:'', tag:tag||'', res:r});
+  recomputeAll(t); saveTape(t); rebuildMap(); renderTape();
+}
+function clearTape(){ const s=activeSheet(); if(s) s.tape=[]; saveSheets(); rebuildMap(); renderTape(); }
+function tappableNums(s){
+  return s.replace(/[\d,]+\.?\d*/g, m=>{
+    const raw = m.replace(/,/g,'');
+    return `<span class="tnum" onclick="event.stopPropagation();insertValue('${raw}')">${m}</span>`;
+  });
+}
+function renderTape(){
+  rebuildMap();
+  const el = document.getElementById('tape');
+  const t = loadTape();
+  const committed = t.map(x=>{
+    try{
+      const nameChip = x.name
+        ? `<span class="name-chip" onclick="event.stopPropagation();nameLine('${x.id}')">${esc(x.name)}</span>`
+        : (x.tag?`<span class="tag">${esc(x.tag)}</span>`:'');
+      const main = (x.disp!=null) ? tappableNums(esc(x.disp)) : fmtExpr(x.raw);
+      const resTxt = isNaN(x.res) ? '<span style="color:#e57373">ERR</span>'
+        : `<span class="res tnum" onclick="event.stopPropagation();insertRef('${x.id}')">${fmt(x.res)}</span>`;
+      return `<div class="tape-line" data-id="${x.id}">`
+        + `<div class="line-main">${nameChip}${main} = ${resTxt}</div>`
+        + `<div class="line-acts">`
+        + `<button class="line-act" onclick="editLine('${x.id}')" title="編集">✎</button>`
+        + `<button class="line-act" onclick="nameLine('${x.id}')" title="名前">🏷</button>`
+        + `<button class="line-act" onclick="copyLine('${x.id}')" title="コピー">⧉</button>`
+        + `<button class="line-act" onclick="delLine('${x.id}')" title="削除">&times;</button>`
+        + `</div></div>`;
+    }catch(err){ return ''; }
+  }).join('');
+  // 現行の式（一覧の一番下・左寄せ）＋ 薄グレーの仮プレビュー
+  let curInner;
+  if(expr===''){
+    curInner = '<span class="cur-ph">0</span>';
+  } else {
+    const plain = /^-?\d*\.?\d*$/.test(expr);
+    let prev='';
+    if(!plain){
+      try{ const v=curVal(); if(!isNaN(v)&&isFinite(v)) prev=` <span class="cur-eq">=</span> <span class="cur-prev">${fmt(v)}</span>`; }catch(e){}
+    }
+    curInner = fmtExpr(expr) + prev;
+  }
+  const editTag = editingId ? '<span class="name-chip" style="background:#7a4">編集中</span>' : '';
+  const curRow = `<div class="tape-line current"><div class="line-main">${editTag}${curInner}</div></div>`;
+  const blankRow = `<div class="tape-line blank" onclick="nextLine()" title="タップで確定して次の行へ">&nbsp;</div>`;
+  const hint = t.length===0 ? '<div class="tape-empty2">式を入力して = を押すと履歴に残ります</div>' : '';
+  el.innerHTML = hint + committed + curRow + blankRow;
+  el.scrollTop = el.scrollHeight;
+  bindSwipe();
+  renderSummary();
+}
+// スワイプ: 左で削除 / 右で複製
+function bindSwipe(){
+  document.querySelectorAll('.tape-line[data-id]').forEach(row=>{
+    let x0=null,dx=0;
+    row.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; dx=0; row.style.transition='none'; },{passive:true});
+    row.addEventListener('touchmove',e=>{ if(x0==null)return; dx=e.touches[0].clientX-x0; row.style.transform='translateX('+dx+'px)'; },{passive:true});
+    row.addEventListener('touchend',()=>{ if(x0==null)return; row.style.transition='transform .15s'; const id=row.dataset.id;
+      if(dx<-70){ row.style.transform='translateX(-110%)'; setTimeout(()=>delLine(id),130); }
+      else if(dx>70){ row.style.transform='translateX(0)'; dupLine(id); }
+      else { row.style.transform='translateX(0)'; }
+      x0=null;
+    });
+  });
+}
+// 履歴行アクション（id指定）
+function findE(id){ return loadTape().find(x=>x.id===id); }
+function editLine(id){
+  const e=findE(id); if(!e) return;
+  if(e.disp!=null && /^-?\d+\.?\d*$/.test(e.raw)){ expr=e.raw; editingId=null; render(); toast('値を呼び戻しました'); return; }
+  editingId=id; expr=e.raw; render(); toast('編集中：= で更新');
+}
+function nameLine(id){
+  const t=loadTape(); const e=t.find(x=>x.id===id); if(!e) return;
+  const nm=prompt('この計算に名前を付ける（空欄で削除）', e.name||'');
+  if(nm===null) return;
+  e.name=nm.trim(); saveTape(t); rebuildMap(); renderTape();
+}
+function copyLine(id){
+  const e=findE(id); if(!e) return;
+  const left = (e.disp!=null) ? e.disp : fmtExpr(e.raw).replace(/<[^>]+>/g,'');
+  const txt = `${e.name?e.name+': ':''}${left} = ${fmt(e.res)}`;
+  const done=()=>toast('コピーしました');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, cb){
+  const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); cb&&cb(); }catch(e){}
+  document.body.removeChild(ta);
+}
+function delLine(id){ const t=loadTape().filter(x=>x.id!==id); recomputeAll(t); saveTape(t); rebuildMap(); renderTape(); }
+function dupLine(id){
+  const t=loadTape(); const idx=t.findIndex(x=>x.id===id); if(idx<0) return;
+  const c=Object.assign({},t[idx]); c.id=newId(); c.name='';
+  t.splice(idx+1,0,c); recomputeAll(t); saveTape(t); rebuildMap(); renderTape();
+}
+// クリップボードから貼り付け
+function pasteClip(){
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(applyPaste).catch(()=>{ const x=prompt('貼り付ける数値・式'); if(x!=null)applyPaste(x); });
+  } else { const x=prompt('貼り付ける数値・式'); if(x!=null)applyPaste(x); }
+}
+function applyPaste(txt){
+  const cleaned=(txt||'').replace(/[,，]/g,'').replace(/[^0-9+\-*/().]/g,'');
+  if(!cleaned){ toast('数値が見つかりません'); return; }
+  if(expr===''||/[+\-*/(]$/.test(expr)) expr+=cleaned; else expr=cleaned;
+  render(); toast('貼り付けました');
+}
+function askClearTape(){
+  if(loadTape().length===0) return;
+  if(SET.confirmAC && !confirm('履歴をすべて消去しますか？')) return;
+  clearTape();
+}
+
+// ── 集計バー ──
+// 小数点第2位まで（それ以降は切り捨て）
+function trunc2(v){ return Math.sign(v)*Math.floor(Math.abs(v)*100 + 1e-6)/100; }
+function fmtTrunc2(v){
+  const t=trunc2(v), neg=t<0; let [i,d]=String(Math.abs(t)).split('.');
+  i=i.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return (neg?'-':'')+(d!=null?i+'.'+d:i);
+}
+// 集計トグルのアイコン（横棒＋山/谷）
+const ICON_COLLAPSED = '<svg width="26" height="17" viewBox="0 0 26 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 7 13 3 20 7"/><line x1="5" y1="13" x2="21" y2="13"/></svg>';
+const ICON_EXPANDED  = '<svg width="26" height="17" viewBox="0 0 26 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="4" x2="21" y2="4"/><polyline points="6 10 13 14 20 10"/></svg>';
+let sumState = 0;   // 0:非表示 / 1:合計のみ / 2:全項目を行展開
+function toggleSum(){ sumState = (sumState===0) ? 1 : 0; renderSummary(); }
+function setSum(s){ sumState = s; renderSummary(); }
+function renderSummary(){
+  const bar=document.getElementById('sumbar');
+  const tg=document.getElementById('sumtoggle');
+  const body=document.getElementById('sumbody');
+  const t=loadTape().map(x=>+x.res).filter(v=>!isNaN(v)&&isFinite(v));
+  // 履歴なし or 非表示 → バーを隠して「横棒の上に山型」に
+  if(t.length===0 || sumState===0){
+    bar.style.display='none';
+    if(tg) tg.innerHTML=ICON_COLLAPSED;
+    return;
+  }
+  bar.style.display='flex';
+  if(tg) tg.innerHTML=ICON_EXPANDED;
+  const sum=t.reduce((a,b)=>a+b,0);
+  const avg=sum/t.length, max=Math.max(...t), min=Math.min(...t);
+  if(sumState===1){
+    body.innerHTML=`<div class="sum-row main" onclick="setSum(2)"><span>合計</span><span class="sv">${fmtTrunc2(sum)}<span class="cv">›</span></span></div>`;
+  } else {
+    const taxInc = sum*(1+SET.tax/100);
+    body.innerHTML=[
+      ['合計',sum],[`合計(税込${SET.tax}%)`,taxInc],['平均',avg],['最大',max],['最小',min],
+    ].map(([l,v])=>`<div class="sum-row" onclick="insertValue('${trunc2(v)}')"><span>${l}</span><span class="sv">${fmtTrunc2(v)}</span></div>`).join('')
+     + `<div class="sum-row" onclick="insertValue('${t.length}')"><span>件数</span><span class="sv">${t.length}</span></div>`
+     + `<div class="sum-row act"><span class="lnk" onclick="setSum(1)">▲ 閉じる</span><span class="lnk" onclick="askClearTape()">🗑 履歴消去</span></div>`;
+  }
+}
+
+// ── 不動産機能 ──
+function conv(factor){
+  const cv = curVal();
+  const v = trunc2(cv*factor);   // 小数点第2位まで（切り捨て）
+  pushTape(`${fmt(cv)} ${factor>1?'坪':'㎡'}`, v, factor>1?'坪→㎡':'㎡→坪');
+  expr = String(v); render();
+}
+function taxOp(factor, tag){
+  const cv = curVal();
+  const v = Math.round(cv*factor);
+  pushTape(`${fmt(cv)} → ${tag}`, v, tag);
+  expr = String(v); render();
+}
+function taxIncl(){ taxOp(1+SET.tax/100, `税込${SET.tax}%`); }
+function taxExcl(){ taxOp(1/(1+SET.tax/100), `税抜`); }
+function openModal(id){
+  if(id==='m-set'){
+    document.getElementById('s-tax').value = SET.tax;
+    document.getElementById('s-dec').value = SET.decimals;
+    document.getElementById('s-confirm').checked = !!SET.confirmAC;
+    requestPersist();
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function saveSettings(){
+  const tax=parseFloat(document.getElementById('s-tax').value);
+  SET.tax = (isNaN(tax)||tax<0)?10:tax;
+  SET.decimals = document.getElementById('s-dec').value;
+  SET.confirmAC = document.getElementById('s-confirm').checked;
+  localStorage.setItem(SET_KEY, JSON.stringify(SET));
+  updTaxLabels(); render(); renderTape();
+  closeModal('m-set'); toast('設定を保存しました');
+}
+function updTaxLabels(){
+  document.getElementById('btn-taxin').textContent = `税込`;
+  document.getElementById('btn-taxin').title = `税込（+${SET.tax}%）`;
+  document.getElementById('btn-taxex').textContent = `税抜`;
+  document.getElementById('btn-taxex').title = `税抜（÷${(1+SET.tax/100).toFixed(2)}）`;
+}
+// トースト
+let _toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(_toastTimer); _toastTimer=setTimeout(()=>el.classList.remove('show'),1600);
+}
+
+// ── バックアップ（端末ファイルへ書き出し / 復元） ──
+function exportBackup(){
+  const data={ app:'nglow-calc', version:2, exportedAt:new Date().toISOString(), sheets:_sheets, settings:SET };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date();
+  const ymd=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+            +'_'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0');
+  const a=document.createElement('a');
+  a.href=url; a.download='nglow-calc-backup-'+ymd+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('バックアップを書き出しました');
+}
+function importBackup(file){
+  const input=document.getElementById('restore-file');
+  if(!file){ if(input) input.value=''; return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const hasSheets = data && data.sheets && Array.isArray(data.sheets.sheets);
+      const hasTape   = data && Array.isArray(data.tape);
+      if(!hasSheets && !hasTape) throw new Error('形式が違います');
+      if(!confirm('現在の履歴をこのバックアップで置き換えます。よろしいですか？')){ if(input) input.value=''; return; }
+      if(hasSheets){
+        _sheets = data.sheets;
+        if(!_sheets.active || !_sheets.sheets.find(s=>s.id===_sheets.active)) _sheets.active=_sheets.sheets[0].id;
+      } else {
+        const id=newId();
+        _sheets={ active:id, sheets:[{id, name:'復元', tape:data.tape}] };
+      }
+      saveSheets();
+      if(data.settings){ SET=Object.assign({tax:10,decimals:'auto',confirmAC:true}, data.settings); localStorage.setItem(SET_KEY, JSON.stringify(SET)); }
+      migrateTape(); rebuildMap(); updSheetHeader(); updTaxLabels(); renderTape(); render();
+      closeModal('m-set'); toast('復元しました');
+    }catch(err){ alert('復元に失敗しました: '+err.message); }
+    if(input) input.value='';
+  };
+  reader.readAsText(file);
+}
+// 永続ストレージ申請（自動削除の抑止）＋状態表示
+function requestPersist(){
+  if(navigator.storage && navigator.storage.persist){
+    navigator.storage.persisted().then(p=>{
+      if(p){ setPersistNote(true); return; }
+      navigator.storage.persist().then(setPersistNote);
+    }).catch(()=>{});
+  }
+}
+function setPersistNote(ok){
+  const el=document.getElementById('persist-note'); if(!el) return;
+  el.textContent = ok ? '✓ 永続ストレージ有効（自動削除されにくい設定）'
+                      : '※ この端末では自動削除の抑止が未保証です。定期的にバックアップ書き出しを推奨';
+}
+
+// 利回り
+function openYield(){
+  const p = document.getElementById('y-price');
+  const cv = curVal();
+  if(cv>0 && !p.value) p.value = cv;
+  calcYield(); openModal('m-yield');
+}
+function calcYield(){
+  const p = parseFloat(document.getElementById('y-price').value);
+  const r = parseFloat(document.getElementById('y-rent').value);
+  const out = document.getElementById('y-out');
+  if(p>0 && r>0){ out.textContent = (r/p*100).toFixed(2)+'%'; out.dataset.v = (Math.round(r/p*10000)/100); }
+  else { out.textContent='--'; out.dataset.v=''; }
+}
+function sendYield(){
+  const v = document.getElementById('y-out').dataset.v;
+  if(v){ const p=document.getElementById('y-price').value, r=document.getElementById('y-rent').value;
+    pushTape(`利回り ${fmt(r)}万 ÷ ${fmt(p)}万`, parseFloat(v), '利回り');
+    expr=String(v); render(); }
+  closeModal('m-yield');
+}
+// 値引き
+function openDiscount(){
+  const b=document.getElementById('d-base');
+  const cv=curVal();
+  if(cv>0) b.value=cv;
+  calcDisc(); openModal('m-disc');
+}
+function setDisc(p){ document.getElementById('d-pct').value=p; calcDisc(); }
+function calcDisc(){
+  const b=parseFloat(document.getElementById('d-base').value);
+  const p=parseFloat(document.getElementById('d-pct').value);
+  const out=document.getElementById('d-out'); const lbl=document.getElementById('d-lbl');
+  if(b>0 && p>=0){ const after=Math.round(b*(1-p/100)); out.textContent=fmt(after); out.dataset.v=after;
+    lbl.textContent=`値引き後（−${fmt(Math.round(b*p/100))}）`; }
+  else { out.textContent='--'; out.dataset.v=''; lbl.textContent='値引き後の金額'; }
+}
+function sendDisc(){
+  const v=document.getElementById('d-out').dataset.v;
+  if(v){ const b=document.getElementById('d-base').value, p=document.getElementById('d-pct').value;
+    pushTape(`${fmt(b)} −${p}%`, parseFloat(v), '値引き');
+    expr=String(v); render(); }
+  closeModal('m-disc');
+}
+
+// 物理キーボード対応
+document.addEventListener('keydown', e=>{
+  const k=e.key;
+  if(/[0-9]/.test(k)) num(k);
+  else if(k==='.') dot();
+  else if(k==='+'||k==='-'||k==='*') setOp(k);
+  else if(k==='/'){ e.preventDefault(); setOp('/'); }
+  else if(k==='('){ lparen(); }
+  else if(k===')'){ rparen(); }
+  else if(k==='Enter'||k==='='){ e.preventDefault(); equals(); }
+  else if(k==='Backspace') backspace();
+  else if(k==='Escape') allClear();
+  else if(k==='%') percent();
+});
+
+// 初期化
+requestPersist();
+initSheets(); migrateTape(); rebuildMap(); updSheetHeader(); updTaxLabels(); renderTape(); render();
+</script>
+</body>
+</html>
