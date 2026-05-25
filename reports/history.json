@@ -411,5 +411,12 @@
     "new": 10,
     "ranked": 81,
     "best_yield": 11.7
+  },
+  "2026-05-25": {
+    "total": 1987,
+    "display": 586,
+    "new": 3,
+    "ranked": 81,
+    "best_yield": 11.7
   }
 }
