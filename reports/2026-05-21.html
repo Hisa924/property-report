@@ -196,6 +196,9 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
   <button class="filter-btn new-filter active" onclick="toggleNew(this)" style="border-color:#e74c3c;background:#e74c3c;color:white">🆕 新着</button>
   <button class="filter-btn pricedown-filter active" onclick="togglePriceDown(this)" style="border-color:#27ae60;background:#27ae60;color:white">💰 値下げ</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
+  <button class="filter-btn focus-north" onclick="toggleFocus('north',this)" style="border-color:#2C6FBB;color:#2C6FBB">🧭 北向き</button>
+  <button class="filter-btn focus-commercial" onclick="toggleFocus('commercial',this)" style="border-color:#B8860B;color:#B8860B">🏢 商業</button>
+  <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
   <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap"><span class="filter-label" style="margin:0">サイト</span>
   <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
   <div id="site-filter-btns" style="display:inline-flex;gap:6px"></div></div>
@@ -225,6 +228,8 @@ function rankCls(r){
   return"NG";
 }
 
+function isNorthFacing(p){var d=String(p.front_direction||'').trim();if(!d)return false;if(d==='\u5317')return true;var hasNeNw=d.indexOf('\u5317\u6771')>=0||d.indexOf('\u5317\u897f')>=0;var hasOther=d.indexOf('\u5357')>=0||d.indexOf('\u6771')>=0||d.indexOf('\u897f')>=0;return d.indexOf('\u5317')>=0&&!hasNeNw&&!hasOther;}
+function isCommercialZone(p){var z=String(p.use_zone||'').trim();return z.indexOf('\u5546\u696d\u5730\u57df')>=0&&z.indexOf('\u8fd1\u96a3')<0;}
 function buildCard(p){
   const rc = rankCls(p.rank);
   let imgHtml;
@@ -341,6 +346,8 @@ let _activeRank="all";
 let _activeSite="all";
 let _newOnly=true;
 let _priceDownOnly=true;
+let _focusNorth=false;
+let _focusCommercial=false;
 
 function _applyFilters(){
   document.querySelectorAll(".card").forEach(card=>{
@@ -357,7 +364,7 @@ function _applyFilters(){
     const isPriceDown=card.dataset.pricechange==="down";
     const anyTypeFilter=_newOnly||_priceDownOnly;
     const typeOk=!anyTypeFilter||(_newOnly&&isNew)||(_priceDownOnly&&isPriceDown);
-    card.style.display=(rankOk&&siteOk&&typeOk)?"":"none";
+    const northOk=!_focusNorth||card.dataset.north==="1";const commOk=!_focusCommercial||card.dataset.commercial==="1";card.style.display=(rankOk&&siteOk&&typeOk&&northOk&&commOk)?"":"none";
   });
   updateCount();
 }
@@ -375,6 +382,20 @@ function togglePriceDown(btn){
   btn.classList.toggle("active");
   if(_priceDownOnly){btn.style.background="#27ae60";btn.style.color="white";btn.style.borderColor="#27ae60";}
   else{btn.style.background="white";btn.style.color="#27ae60";btn.style.borderColor="#27ae60";}
+
+function toggleFocus(kind,btn){
+  if(kind==="north"){ _focusNorth=!_focusNorth; btn.classList.toggle("active");
+    if(_focusNorth){btn.style.background="#2C6FBB";btn.style.color="white";}else{btn.style.background="white";btn.style.color="#2C6FBB";} }
+  else if(kind==="commercial"){ _focusCommercial=!_focusCommercial; btn.classList.toggle("active");
+    if(_focusCommercial){btn.style.background="#B8860B";btn.style.color="white";}else{btn.style.background="white";btn.style.color="#B8860B";} }
+  _applyFilters();
+}
+function _applyFocusFromURL(){
+  try{ var params=new URLSearchParams(location.search); var f=params.get("focus");
+    if(f==="north"){ var b=document.querySelector(".focus-north"); if(b&&!_focusNorth)toggleFocus("north",b); }
+    else if(f==="commercial"){ var b=document.querySelector(".focus-commercial"); if(b&&!_focusCommercial)toggleFocus("commercial",b); }
+  }catch(e){}
+}
   _applyFilters();
 }
 
@@ -558,6 +579,7 @@ function _renderCal(){
 })();
 
 renderAll();
+_applyFocusFromURL();
 initSwipes();
 /* reports/*.html 専用: 今日基準の7日チップをJSで動的生成 */
 
