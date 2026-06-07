@@ -383,6 +383,8 @@ function togglePriceDown(btn){
   btn.classList.toggle("active");
   if(_priceDownOnly){btn.style.background="#27ae60";btn.style.color="white";btn.style.borderColor="#27ae60";}
   else{btn.style.background="white";btn.style.color="#27ae60";btn.style.borderColor="#27ae60";}
+  _applyFilters();
+}
 
 function toggleFocus(kind,btn){
   if(kind==="north"){ _focusNorth=!_focusNorth; btn.classList.toggle("active");
@@ -396,8 +398,6 @@ function _applyFocusFromURL(){
     if(f==="north"){ var b=document.querySelector(".focus-north"); if(b&&!_focusNorth)toggleFocus("north",b); }
     else if(f==="commercial"){ var b=document.querySelector(".focus-commercial"); if(b&&!_focusCommercial)toggleFocus("commercial",b); }
   }catch(e){}
-}
-  _applyFilters();
 }
 
 function renderAll(){
