@@ -31,8 +31,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',san
 .stat{text-align:center}
 .stat-num{font-size:28px;font-weight:700;color:#4fc3f7}
 .stat-label{font-size:11px;opacity:.6;margin-top:2px}
-.site-breakdown{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;justify-content:center}
-.site-chip{padding:4px 12px;border-radius:16px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);text-decoration:none;display:inline-block;transition:background .15s,border-color .15s,transform .15s;cursor:pointer}
+.site-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}
+.site-chip{padding:7px 12px;border-radius:16px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);text-decoration:none;display:block;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,border-color .15s,transform .15s;cursor:pointer}
 a.site-chip:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35);transform:translateY(-1px)}
 a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
 
@@ -45,8 +45,8 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
 .rank-badge.rank-NG{background:#555;color:#aaa}
 .history-nav{margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}
 .history-label{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:8px}
-.history-days{display:flex;gap:8px;flex-wrap:wrap}
-.day-chip{padding:6px 0;width:72px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;text-decoration:none;text-align:center}
+.history-days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.day-chip{padding:7px 0;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;text-decoration:none;text-align:center}
 .day-chip:hover{background:rgba(255,255,255,.18)}
 .day-chip.active{background:#4fc3f7;border-color:#4fc3f7}
 .day-chip-date{font-size:11px;color:rgba(255,255,255,.7)}
@@ -54,7 +54,7 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
 .day-chip-count{font-size:13px;font-weight:700;color:white;margin-top:1px}
 .day-chip.active .day-chip-count{color:#1a1a2e}
 .day-chip-count.zero{color:rgba(255,255,255,.3);font-weight:400;font-size:11px}
-.past-btn{padding:6px 0;width:72px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;text-align:center}
+.past-btn{padding:7px 0;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;transition:all .2s;text-align:center;display:flex;align-items:center;justify-content:center}
 .past-btn:hover{background:rgba(255,255,255,.18)}
 .cal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center}.cal-overlay.open{display:flex}
 .cal-box{background:#1e1e34;border-radius:14px;padding:20px;min-width:300px;max-width:340px;color:white;box-shadow:0 12px 40px rgba(0,0,0,.5)}
@@ -69,7 +69,7 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
 .cal-day .cal-count{font-size:9px;color:rgba(255,255,255,.4);display:block;margin-top:1px}.cal-day.has-data .cal-count{color:rgba(255,255,255,.6)}
 .filter-bar{background:white;padding:12px 32px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #e0e0e0;flex-wrap:wrap}
 .filter-label{font-size:12px;color:#888;font-weight:600}
-.filter-btn{padding:6px 14px;border:1px solid #ddd;border-radius:20px;background:white;font-size:12px;cursor:pointer;transition:all .2s}
+.filter-btn{padding:6px 14px;border:1px solid #ddd;border-radius:20px;background:white;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .filter-btn:hover,.filter-btn.active{background:#1a1a2e;color:white;border-color:#1a1a2e}
 .sort-select{margin-left:auto;padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer}
 .count-label{font-size:12px;color:#888;margin-left:8px}
@@ -204,9 +204,9 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
   <button class="filter-btn focus-north" onclick="toggleFocus('north',this)" style="border-color:#2C6FBB;color:#2C6FBB">🧭 北向き</button>
   <button class="filter-btn focus-commercial" onclick="toggleFocus('commercial',this)" style="border-color:#B8860B;color:#B8860B">🏢 商業</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
-  <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap"><span class="filter-label" style="margin:0">サイト</span>
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="filter-label" style="margin:0">サイト</span>
   <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
-  <div id="site-filter-btns" style="display:inline-flex;gap:6px"></div></div>
+  <div id="site-filter-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
   <span class="count-label" id="count-label"></span>
   <select class="sort-select" onchange="sortCards(this.value)">
     <option value="rank">ランク順</option>
