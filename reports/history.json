@@ -684,5 +684,12 @@
     "new": 24,
     "ranked": 158,
     "best_yield": 11.7
+  },
+  "2026-07-04": {
+    "total": 2702,
+    "display": 1180,
+    "new": 7,
+    "ranked": 160,
+    "best_yield": 11.7
   }
 }
