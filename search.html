@@ -227,7 +227,9 @@ function sortFn(a,b){
     case 'price_asc': return (a.price??1e12)-(b.price??1e12);
     case 'area_desc': return (b.area??0)-(a.area??0);
     case 'far_desc': return (b.far??0)-(a.far??0);
-    default: return (b.acquired||'').localeCompare(a.acquired||'');
+    // 新着順: 掲載日(listed)があればそれ、無ければ初出日(first_acquired)で降順。
+    // 取得日(acquired=最終スクレイプ日)は常に当日になり無意味なので使わない。
+    default: return (b.listed||b.first_acquired||'').localeCompare(a.listed||a.first_acquired||'');
   }
 }
 
