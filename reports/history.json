@@ -1043,10 +1043,17 @@
     "best_yield": 10.1
   },
   "2026-08-25": {
-    "total": 333,
-    "display": 333,
-    "new": 16,
-    "ranked": 52,
-    "best_yield": 10.1
+    "total": 1968,
+    "display": 1854,
+    "new": 1537,
+    "ranked": 175,
+    "best_yield": 15.3
+  },
+  "2026-08-26": {
+    "total": 1975,
+    "display": 1861,
+    "new": 7,
+    "ranked": 175,
+    "best_yield": 15.3
   }
 }
