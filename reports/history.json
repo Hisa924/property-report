@@ -1153,5 +1153,12 @@
     "new": 10,
     "ranked": 107,
     "best_yield": 10.7
+  },
+  "2026-09-10": {
+    "total": 2444,
+    "display": 773,
+    "new": 5,
+    "ranked": 108,
+    "best_yield": 10.7
   }
 }
