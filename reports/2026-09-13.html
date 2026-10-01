@@ -234,6 +234,7 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
   <button class="filter-btn focus-north" onclick="toggleFocus('north',this)" style="border-color:#2C6FBB;color:#2C6FBB">🧭 北向き</button>
   <button class="filter-btn focus-commercial" onclick="toggleFocus('commercial',this)" style="border-color:#B8860B;color:#B8860B">🏢 商業</button>
+  <button class="filter-btn focus-cheap" onclick="toggleCheap(this)" style="border-color:#7B5EA7;color:#7B5EA7">&#128181; 1億円以下</button>
   <span style="display:inline-block;width:1px;height:20px;background:#e0e0e0;margin:0 4px;vertical-align:middle"></span>
   <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="filter-label" style="margin:0">サイト</span>
   <button class="filter-btn site-filter active" onclick="filterSite('all',null,this)">すべて</button>
@@ -340,7 +341,28 @@ function _dCount(){
   return n;
 }
 
+
+// 「1億円以下」ボタン。独立した条件は持たず、パネルの上限欄を操作する。
+// 条件が2か所にあるとどちらが効いているか分からなくなるため。
+var _CHEAP_MAN=10000;
+function toggleCheap(btn){
+  var e=document.getElementById("dp-price-max");
+  if(!e) return;
+  e.value = (_dNum("dp-price-max")===_CHEAP_MAN) ? "" : String(_CHEAP_MAN);
+  dpChange();
+}
+// ちょうど1億のときだけ光らせる。8000万などで光らせると、消すつもりで
+// 押した時に入力済みの金額が消えてしまい分かりにくい。
+function _syncCheapBtn(){
+  var b=document.querySelector(".focus-cheap");
+  if(!b) return;
+  var on=(_dNum("dp-price-max")===_CHEAP_MAN);
+  b.style.background = on ? "#7B5EA7" : "";
+  b.style.color      = on ? "white" : "#7B5EA7";
+}
+
 function _dSync(){
+  _syncCheapBtn();
   var n=_dCount(), b=document.getElementById("dp-badge");
   if(b) b.textContent=n?String(n):"";
   var t=document.querySelector(".detail-toggle");
