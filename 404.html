@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>ページが見つかりません</title>
+<style>
+body{margin:0;background:#f4f6f8;color:#222;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic Pro',sans-serif;line-height:1.7}
+.box{max-width:520px;margin:48px auto;padding:24px 20px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+h1{font-size:18px;margin:0 0 12px}
+p{font-size:14px;margin:0 0 12px}
+a.btn{display:inline-block;margin-top:8px;padding:10px 16px;background:#1565C0;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1 id="ttl">ページが見つかりません</h1>
+  <p id="msg">URLが間違っているか、ページが削除された可能性があります。</p>
+  <a class="btn" href="/property-report/">最新のレポートを開く</a>
+</div>
+<script>
+// 日次レポートは公開サイトには直近30日分だけ置いている（容量上限のため・2026-10-21）。
+// それより前の日は非公開サイトで全期間見られるので、その案内を出す。
+(function(){
+  var m = location.pathname.match(/\/reports\/(\d{4})-(\d{2})-(\d{2})\.html$/);
+  if (!m) return;
+  document.getElementById('ttl').textContent =
+    Number(m[2]) + '月' + Number(m[3]) + '日のレポートは公開期間を過ぎました';
+  document.getElementById('msg').textContent =
+    'このサイトでは直近30日分のレポートだけを公開しています。それより前の日は、' +
+    'LINEのボタンやホーム画面の「物件レポート」アプリ（非公開サイト）の' +
+    'カレンダーから開けます。';
+})();
+</script>
+</body>
+</html>
