@@ -209,6 +209,10 @@ a.site-chip::after{content:" ↗";font-size:9px;opacity:.6;margin-left:2px}
 <style id="hk-tag-css">
 .hk-tag{background:#00897B;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.02em}
 .hk-tag.hk2{background:rgba(0,137,123,.75)}
+.hdr-links{position:absolute;top:20px;right:24px;display:flex;gap:8px;align-items:center;z-index:2}
+.hdr-links .search-link{position:static}
+@media(max-width:600px){.hdr-links{top:16px;right:14px;gap:6px}.hdr-links .ml-long{display:none}}
+@media(max-width:420px){.hdr-links .ml-text{display:none}.hdr-links .map-link{padding:6px 10px}}
 </style>
 <script id="hk-tag-js">
 /* hk-tag-v1: 高度地区なしバッジ（agents/height_tag.py） */
@@ -332,7 +336,7 @@ function toggleHk(btn){
 </div>
 
 <div class="header">
-  <a class="search-link" href="../search.html">🔍 物件検索</a>
+  <div class="hdr-links"><a class="search-link" href="../search.html">🔍 物件検索</a><a class="search-link map-link" href="../zoning-map.html" title="高度地区なし区域マップ" aria-label="高度地区なし区域マップ">&#128506;<span class="ml-text"> <span class="ml-long">高度地区</span>マップ</span></a></div>
   <div>
     <div class="header-title">収益物件レポート</div>
     <div class="header-date"><a class="date-nav" href="2026-10-21.html" title="前日">&#8249;</a>2026年10月22日（木）<span class="date-nav disabled">&#8250;</span></div>
