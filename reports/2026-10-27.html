@@ -254,8 +254,15 @@ function _hkTowns(p){
   if(k && nums.indexOf(k)>=0) return {ward:ward, names:[best+_hkInt2Kan(k)+"丁目"], whole:false};
   return {ward:ward, names:nums.map(function(x){return best+_hkInt2Kan(x)+"丁目";}), whole:true};
 }
+// 物件資料に高度地区の記載（第2種高度地区 など）があるか。推定値は除く
+function _hkStated(p){
+  if(p.height_district_estimated) return false;
+  var s=_hkN(p.height_district);
+  return /種|高度地区|絶対高さ|最高限度/.test(s) && !/なし|無|指定なし/.test(s);
+}
 // {hk:1|2, s:true/false} か null
 function _hkJudge(p){
+  if(_hkStated(p)) return null;     // 資料の記載を優先する（GISは丁目単位の推定のため）
   var c=_hkZone(p.use_zone); if(!c) return null;
   var t=_hkTowns(p); if(!t) return null;
   var D=HK_L.d[t.ward]||{}, far=_hkFar(p), missing=false;
