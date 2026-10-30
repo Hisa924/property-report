@@ -276,11 +276,18 @@ function _hkJudge(p){
   if(r>=0.1) return {hk:2, s:false};
   return null;
 }
+var _HK_RANKS=["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","NG"];
+var _HK_UP={"both": 4, "height": 3, "partial": 1};
 function _hkInit(){
   if(typeof DATA==="undefined") return;
   DATA.forEach(function(p){
     var r=_hkJudge(p); if(!r) return;
     p._hk=r.hk; p._hks=r.s;
+    // ランクアップ。2026-10-30 以降のレポートは calc_agent で上げ済み（hk_up が入っている）
+    if(p.hk_up===undefined&&!p.disqualified){
+      var i=_HK_RANKS.indexOf(p.rank), up=_HK_UP[r.hk===1?(r.s?"both":"height"):"partial"];
+      if(i>0&&i<_HK_RANKS.length-1) p.rank=_HK_RANKS[Math.max(0,i-up)];
+    }
     if(r.hk===1){
       p.height_district="なし（都市計画GIS）"; p.height_district_estimated=false;
       if(r.s){ p.shadow_reg="なし（日影条例）"; p.shadow_reg_estimated=false; }
@@ -292,7 +299,7 @@ function _hkWrap(f){
     var h=f(p);
     if(!p._hk) return h;
     var lbl=p._hk===1?(p._hks?"高度地区・日影なし":"高度地区なし"):"高度地区なしの区域あり";
-    var tag='<span class="hk-tag hk'+p._hk+'" title="東京都 都市計画GIS（R7.3.31時点）・日影条例から判定。丁目単位の推定なので購入前に区の都市計画図で確認">'+lbl+'</span>';
+    var tag='<span class="hk-tag hk'+p._hk+'" title="東京都 都市計画GIS（R7.3.31時点）・日影条例から判定。丁目単位の推定なので購入前に区の都市計画図で確認（ランク加点あり）">'+lbl+'</span>';
     h=h.replace('<div class="card" ','<div class="card" data-hk="'+p._hk+'" ');
     if(h.indexOf('<div class="tr-badges">')>=0) h=h.replace('<div class="tr-badges">','<div class="tr-badges">'+tag);
     else h=h.replace('<div class="card-address">',tag+'<div class="card-address">');
