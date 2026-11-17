@@ -15,23 +15,9 @@ a.btn{display:inline-block;margin-top:8px;padding:10px 16px;background:#1565C0;c
 </head>
 <body>
 <div class="box">
-  <h1 id="ttl">ページが見つかりません</h1>
-  <p id="msg">URLが間違っているか、ページが削除された可能性があります。</p>
-  <a class="btn" href="/property-report/">最新のレポートを開く</a>
+  <h1>このサイトでのレポート公開は終了しました</h1>
+  <p>収益物件レポートは、LINEのボタンやホーム画面の「物件レポート」アプリ（非公開サイト）から開いてください。</p>
 </div>
-<script>
-// 日次レポートは公開サイトには直近30日分だけ置いている（容量上限のため・2026-10-21）。
-// それより前の日は非公開サイトで全期間見られるので、その案内を出す。
-(function(){
-  var m = location.pathname.match(/\/reports\/(\d{4})-(\d{2})-(\d{2})\.html$/);
-  if (!m) return;
-  document.getElementById('ttl').textContent =
-    Number(m[2]) + '月' + Number(m[3]) + '日のレポートは公開期間を過ぎました';
-  document.getElementById('msg').textContent =
-    'このサイトでは直近30日分のレポートだけを公開しています。それより前の日は、' +
-    'LINEのボタンやホーム画面の「物件レポート」アプリ（非公開サイト）の' +
-    'カレンダーから開けます。';
-})();
-</script>
+<!-- 2026-11-17 公開サイトは画像・ツール置き場（裏方）だけにした。レポートは非公開サイトのみ -->
 </body>
 </html>

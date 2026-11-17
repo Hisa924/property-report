@@ -1,0 +1,7 @@
+# 公開サイトは「裏方」だけ（2026-11-17）。レポート類は手元で作り続けるが公開しない
+# （非公開サイト hs-report の材料。agents/webui_generator.push_webui 参照）
+/index.html
+/reports/
+/search.html
+/search_index.json
+/zoning-map.html
